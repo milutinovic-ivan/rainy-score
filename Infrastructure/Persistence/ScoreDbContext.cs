@@ -16,15 +16,15 @@ namespace Infrastructure.Persistence
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Country>().HasData(
-                new Country { Id = 1, Name = "England", ShortCode = "ENG" }
+                new Country { Id = 1, Name = "England", ShortCode = "ENG", CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc) }
                 );
 
             modelBuilder.Entity<League>().HasData(
-                new League { Id = 1, CountryId = 1, Name = "Premier League", ShortCode = "E0" },
-                new League { Id = 2, CountryId = 1, Name = "Championship", ShortCode = "E1" },
-                new League { Id = 3, CountryId = 1, Name = "League 1", ShortCode = "E2" },
-                new League { Id = 4, CountryId = 1, Name = "League 2", ShortCode = "E3" },
-                new League { Id = 5, CountryId = 1, Name = "Conference", ShortCode = "EC" }
+                new League { Id = 1, CountryId = 1, Name = "Premier League", ShortCode = "E0", CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc) },
+                new League { Id = 2, CountryId = 1, Name = "Championship", ShortCode = "E1", CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc) },
+                new League { Id = 3, CountryId = 1, Name = "League 1", ShortCode = "E2", CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc) },
+                new League { Id = 4, CountryId = 1, Name = "League 2", ShortCode = "E3", CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc) },
+                new League { Id = 5, CountryId = 1, Name = "Conference", ShortCode = "EC", CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc) }
                 );
 
             base.OnModelCreating(modelBuilder);
