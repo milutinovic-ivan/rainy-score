@@ -1,0 +1,6 @@
+@RainyScore_HostAddress = http://localhost:5258
+
+GET {{RainyScore_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
