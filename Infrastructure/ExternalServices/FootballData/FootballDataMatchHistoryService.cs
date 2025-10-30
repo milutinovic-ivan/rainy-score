@@ -30,6 +30,7 @@ namespace Infrastructure.ExternalServices.FootballData
                 var config = new CsvConfiguration(CultureInfo.InvariantCulture)
                 {
                     TrimOptions = TrimOptions.Trim,
+                    IgnoreBlankLines = true
                 };
 
                 config.BadDataFound = c =>

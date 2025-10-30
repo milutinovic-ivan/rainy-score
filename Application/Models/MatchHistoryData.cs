@@ -6,8 +6,8 @@ namespace Application.Models
     public class MatchHistoryData
     {
         public string LeagueDivision { get; set; }
-        public string MatchDate { get; set; }
-        public string MatchTime { get; set; }
+        public DateOnly MatchDate { get; set; }
+        public TimeOnly MatchTime { get; set; }
         public string HomeTeam { get; set; }
         public string AwayTeam { get; set; }
         public int FullTimeHomeGoals { get; set; }

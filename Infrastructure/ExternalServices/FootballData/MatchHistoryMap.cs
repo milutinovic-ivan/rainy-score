@@ -9,7 +9,7 @@ namespace Infrastructure.ExternalServices.FootballData
         {
             Map(m => m.LeagueDivision).Name("Div");
             Map(m => m.MatchDate).Name("Date").TypeConverterOption.Format("dd/MM/yyyy");
-            Map(m => m.MatchTime).Name("Time").TypeConverterOption.Format("HH/mm");
+            Map(m => m.MatchTime).Name("Time").TypeConverterOption.Format("HH:mm");
             Map(m => m.HomeTeam).Name("HomeTeam");
             Map(m => m.AwayTeam).Name("AwayTeam");
             Map(m => m.FullTimeHomeGoals).Name("FTHG");

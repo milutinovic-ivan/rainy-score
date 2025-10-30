@@ -7,7 +7,7 @@ namespace Domain.Entities
         public int LeagueId { get; set; }
         public League League { get; set; } = null!;
         public int Season { get;set; }
-        public DateTime MatchDate { get; set; }
+        public DateOnly MatchDate { get; set; }
         public TimeOnly MatchTime { get; set; }
         public int HomeTeamId { get; set; }
 
