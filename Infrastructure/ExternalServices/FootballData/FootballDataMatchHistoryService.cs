@@ -2,6 +2,7 @@
 using Application.Models;
 using CsvHelper;
 using CsvHelper.Configuration;
+using CsvHelper.TypeConversion;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using System.Globalization;
@@ -23,10 +24,7 @@ namespace Infrastructure.ExternalServices.FootballData
         {
             return Task.Run(() =>
             {
-                var basePath = AppContext.BaseDirectory;
-                var path = Path.GetFullPath( 
-                    Path.Combine(_hostEnvironment.ContentRootPath, "..", "Infrastructure", "ExternalServices", "FootballData", "Files", "E19", "E0.csv"));
-
+                //set importer configuration
                 var config = new CsvConfiguration(CultureInfo.InvariantCulture)
                 {
                     TrimOptions = TrimOptions.Trim,
@@ -38,21 +36,41 @@ namespace Infrastructure.ExternalServices.FootballData
                     Console.WriteLine($"Bad data at row {c.Field}: {c.RawRecord}");
                 };
 
-                using var reader = new StreamReader(path, Encoding.UTF8);
-                using var csv = new CsvReader(reader, config);
+                //import all files from directory
+                var path = Path.GetFullPath( 
+                    Path.Combine(_hostEnvironment.ContentRootPath, "..", "Infrastructure", "ExternalServices", "FootballData", "Files"));
 
-                csv.Context.RegisterClassMap<MatchHistoryMap>();
+                var files = Directory.GetFiles(path);
 
-                try
+                List<MatchHistoryData> matchHistories = new List<MatchHistoryData>();
+
+                int failImportsCount = 0;
+
+                foreach (var file in files)
                 {
-                    var records = csv.GetRecords<MatchHistoryData>().ToList();
-                    return records;
+                    using var reader = new StreamReader(file, Encoding.UTF8);
+                    using var csv = new CsvReader(reader, config);
+
+                    csv.Context.RegisterClassMap<MatchHistoryMap>();
+
+                    while (csv.Read())
+                    {
+                        try
+                        {
+                            var record = csv.GetRecord<MatchHistoryData>();
+                            matchHistories.Add(record);
+                        }
+                        catch (TypeConverterException)
+                        {
+                            failImportsCount++;
+                            continue;
+                        }
+                    }
                 }
-                catch (ReaderException ex)
-                {
-                    Console.WriteLine(ex.InnerException?.Message);
-                    throw;
-                }                
+
+                Console.WriteLine($"Fail imports count: {failImportsCount}");
+
+                return matchHistories;
             });
         }
     }

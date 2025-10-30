@@ -43,6 +43,9 @@ namespace Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ShortCode")
+                        .IsUnique();
+
                     b.ToTable("Countries");
 
                     b.HasData(
@@ -52,6 +55,76 @@ namespace Infrastructure.Migrations
                             CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
                             Name = "England",
                             ShortCode = "ENG"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Scotland",
+                            ShortCode = "SCT"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Germany",
+                            ShortCode = "GER"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Italy",
+                            ShortCode = "ITA"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Spain",
+                            ShortCode = "ESP"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "France",
+                            ShortCode = "FRA"
+                        },
+                        new
+                        {
+                            Id = 7,
+                            CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Netherlands",
+                            ShortCode = "NL"
+                        },
+                        new
+                        {
+                            Id = 8,
+                            CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Belgium",
+                            ShortCode = "BEL"
+                        },
+                        new
+                        {
+                            Id = 9,
+                            CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Portugal",
+                            ShortCode = "PRT"
+                        },
+                        new
+                        {
+                            Id = 10,
+                            CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Turkey",
+                            ShortCode = "TUR"
+                        },
+                        new
+                        {
+                            Id = 11,
+                            CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Greece",
+                            ShortCode = "GRC"
                         });
                 });
 
@@ -123,6 +196,142 @@ namespace Infrastructure.Migrations
                             CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
                             Name = "Conference",
                             ShortCode = "EC"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            CountryId = 2,
+                            CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Premier League",
+                            ShortCode = "SC0"
+                        },
+                        new
+                        {
+                            Id = 7,
+                            CountryId = 2,
+                            CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Division 1",
+                            ShortCode = "SC1"
+                        },
+                        new
+                        {
+                            Id = 8,
+                            CountryId = 2,
+                            CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Division 2",
+                            ShortCode = "SC2"
+                        },
+                        new
+                        {
+                            Id = 9,
+                            CountryId = 2,
+                            CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Division 3",
+                            ShortCode = "SC3"
+                        },
+                        new
+                        {
+                            Id = 10,
+                            CountryId = 3,
+                            CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Bundesliga 1",
+                            ShortCode = "D1"
+                        },
+                        new
+                        {
+                            Id = 11,
+                            CountryId = 3,
+                            CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Bundesliga 2",
+                            ShortCode = "D2"
+                        },
+                        new
+                        {
+                            Id = 12,
+                            CountryId = 4,
+                            CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Serie A",
+                            ShortCode = "I1"
+                        },
+                        new
+                        {
+                            Id = 13,
+                            CountryId = 4,
+                            CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Serie B",
+                            ShortCode = "I2"
+                        },
+                        new
+                        {
+                            Id = 14,
+                            CountryId = 5,
+                            CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "La Liga Primera Division",
+                            ShortCode = "SP1"
+                        },
+                        new
+                        {
+                            Id = 15,
+                            CountryId = 5,
+                            CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "La Liga Segunda Division",
+                            ShortCode = "SP2"
+                        },
+                        new
+                        {
+                            Id = 16,
+                            CountryId = 6,
+                            CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Le Championnat",
+                            ShortCode = "F1"
+                        },
+                        new
+                        {
+                            Id = 17,
+                            CountryId = 6,
+                            CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Division 2",
+                            ShortCode = "F2"
+                        },
+                        new
+                        {
+                            Id = 18,
+                            CountryId = 7,
+                            CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Eredivisie",
+                            ShortCode = "N1"
+                        },
+                        new
+                        {
+                            Id = 19,
+                            CountryId = 8,
+                            CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Jupiler League",
+                            ShortCode = "B1"
+                        },
+                        new
+                        {
+                            Id = 20,
+                            CountryId = 9,
+                            CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Liga I",
+                            ShortCode = "P1"
+                        },
+                        new
+                        {
+                            Id = 21,
+                            CountryId = 10,
+                            CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Futbol Ligi 1",
+                            ShortCode = "T1"
+                        },
+                        new
+                        {
+                            Id = 22,
+                            CountryId = 11,
+                            CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Ethniki Katigoria",
+                            ShortCode = "G1"
                         });
                 });
 
@@ -134,10 +343,10 @@ namespace Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("AwayShots")
+                    b.Property<int?>("AwayShots")
                         .HasColumnType("integer");
 
-                    b.Property<int>("AwayShotsOnTarget")
+                    b.Property<int?>("AwayShotsOnTarget")
                         .HasColumnType("integer");
 
                     b.Property<int>("AwayTeamId")
@@ -176,10 +385,10 @@ namespace Infrastructure.Migrations
                     b.Property<char>("HalfTimeWiner")
                         .HasColumnType("character(1)");
 
-                    b.Property<int>("HomeShots")
+                    b.Property<int?>("HomeShots")
                         .HasColumnType("integer");
 
-                    b.Property<int>("HomeShotsOnTarget")
+                    b.Property<int?>("HomeShotsOnTarget")
                         .HasColumnType("integer");
 
                     b.Property<int>("HomeTeamId")

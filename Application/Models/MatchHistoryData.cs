@@ -16,10 +16,10 @@ namespace Application.Models
         public int HalfTimeHomeGoals { get; set; }
         public int HalfTimeAwayGoals { get; set; }
         public char HalfTimeWiner { get; set; }
-        public int HomeShots { get; set; }
-        public int AwayShots { get; set; }
-        public int HomeShotsOnTarget { get; set; }
-        public int AwayShotsOnTarget { get; set; }
+        public int? HomeShots { get; set; }
+        public int? AwayShots { get; set; }
+        public int? HomeShotsOnTarget { get; set; }
+        public int? AwayShotsOnTarget { get; set; }
         public decimal HomeWinOdds { get; set; }
         public decimal DrawWinOdds { get; set; }
         public decimal AwayWinOdds { get; set; }

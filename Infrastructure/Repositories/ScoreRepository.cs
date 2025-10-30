@@ -3,6 +3,7 @@ using Domain.Entities;
 using Domain.Interfaces;
 using System.Reflection.Metadata.Ecma335;
 using Infrastructure.Persistence;
+using System.Threading.Tasks;
 
 namespace Infrastructure.Repositories
 {
@@ -25,21 +26,6 @@ namespace Infrastructure.Repositories
             return await _context.Set<T>().FindAsync(id);
         }
 
-        public async Task AddAsync(T entity)
-        {
-            await _context.Set<T>().AddAsync(entity);
-        }
-
-        public void Update(T entity)
-        {
-            _context.Entry(entity).State = EntityState.Modified;
-        }
-
-        public void Delete(T entity)
-        {
-            _context.Set<T>().Remove(entity);
-        }
-
         public async Task<T?> FirstOrDefaultAsync(Func<IQueryable<T>, IQueryable<T>>? func = null)
         {
             var query = _context.Set<T>().AsQueryable();
@@ -52,6 +38,31 @@ namespace Infrastructure.Repositories
             var query = _context.Set<T>().AsQueryable();
             var resultQuery = func == null ? query : func(query);
             return await resultQuery.SingleOrDefaultAsync();
+        }
+
+        public async Task AddAsync(T entity)
+        {
+            await _context.Set<T>().AddAsync(entity);
+        }
+
+        public async Task AddRangeAsync(IEnumerable<T> entities)
+        {
+            await _context.Set<T>().AddRangeAsync(entities);
+        }
+
+        public void Update(T entity)
+        {
+            _context.Entry(entity).State = EntityState.Modified;
+        }
+
+        public void Delete(T entity)
+        {
+            _context.Set<T>().Remove(entity);
+        }
+
+        public async Task DeleteAll()
+        {
+            await _context.Set<T>().ExecuteDeleteAsync();
         }
 
         public async Task SaveChangesAsync()

@@ -1,8 +1,9 @@
-﻿using Quartz;
-using Application.Intefraces;
-using Microsoft.Extensions.Logging;
-using Domain.Interfaces;
+﻿using Application.Intefraces;
 using Domain.Entities;
+using Domain.Interfaces;
+using Microsoft.Extensions.Logging;
+using Quartz;
+using System.Diagnostics;
 using System.Net.Http.Headers;
 
 namespace Application.Jobs
@@ -29,40 +30,63 @@ namespace Application.Jobs
 
         public async Task Execute(IJobExecutionContext context)
         {
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+
+            //first delete all data from tables Teams and MatchDetails
+            await _teamRepository.DeleteAll();
+            await _matchDetailsRepository.DeleteAll();
+            
             var matches = await _matchHistoryService.GetMatchHistoriesAsync();
 
-            foreach(var match in matches)
-            {
-                var league = await _leagueRepository.SingleOrDefaultAsync(l => l.Where(l => l.ShortCode == match.LeagueDivision));
+            var teamsToInsert = new List<Team>();
 
-                Team? homeTeam = await _teamRepository.SingleOrDefaultAsync(t => t.Where(t => t.Name == match.HomeTeam));
-                Team? awayTeam = await _teamRepository.SingleOrDefaultAsync(t => t.Where(t => t.Name == match.AwayTeam));
+            //insert Teams
+            foreach (var match in matches)
+            {
+                var teamExists = teamsToInsert.Exists(t => t.Name == match.HomeTeam);
 
                 //add teams if doesn't exists
-                if (homeTeam == null)
+                if (!teamExists)
                 {
-                    homeTeam = new Team
+                    var team = new Team
                     {
                         Name = match.HomeTeam,
                         //TODO stadiums should be added
                         StadiumId = 1
                     };
 
-                    await _teamRepository.AddAsync(homeTeam);
-                    await _teamRepository.SaveChangesAsync();
+                    teamsToInsert.Add(team);
                 }
 
-                if (awayTeam == null)
+                teamExists = teamsToInsert.Exists(t => t.Name == match.AwayTeam);
+
+                if (!teamExists)
                 {
-                    awayTeam = new Team
+                    var team = new Team
                     {
                         Name = match.AwayTeam,
                         StadiumId = 1
                     };
 
-                    await _teamRepository.AddAsync(awayTeam);
-                    await _teamRepository.SaveChangesAsync();
+                    teamsToInsert.Add(team);
                 }
+            }
+            //save all at once
+            await _teamRepository.AddRangeAsync(teamsToInsert);
+            await _teamRepository.SaveChangesAsync();
+
+
+            //insert MatchDetails
+            var matchDetailsToInsert = new List<MatchDetails>();
+            var allLeagues = await _leagueRepository.GetAllAsync();
+            var allTeams = await _teamRepository.GetAllAsync();
+
+            foreach (var match in matches) 
+            {
+                var league = allLeagues.Single(l => l.ShortCode == match.LeagueDivision);
+                var homeTeam = allTeams.Single(t => t.Name == match.HomeTeam);
+                var awayTeam = allTeams.Single(t => t.Name == match.AwayTeam);
 
                 var matchDetails = new MatchDetails
                 {
@@ -89,10 +113,16 @@ namespace Application.Jobs
                     GoalsUnder25 = match.GoalsUnder25
                 };
 
-                await _matchDetailsRepository.AddAsync(matchDetails);
+                matchDetailsToInsert.Add(matchDetails);
             }
 
+            //insert all at once
+            await _matchDetailsRepository.AddRangeAsync(matchDetailsToInsert);
             await _matchDetailsRepository.SaveChangesAsync();
+
+            stopwatch.Stop();
+            TimeSpan elapsed = stopwatch.Elapsed;
+            Console.WriteLine($"Elapsed time: {elapsed.TotalMilliseconds} ms");
         }
     }
 }

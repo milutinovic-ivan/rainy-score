@@ -31,4 +31,8 @@
     <ProjectReference Include="..\Application\Application.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="ExternalServices\FootballData\Files\" />
+  </ItemGroup>
+
 </Project>
