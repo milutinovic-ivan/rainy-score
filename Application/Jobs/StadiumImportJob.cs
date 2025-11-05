@@ -44,8 +44,7 @@ namespace Application.Jobs
             {
                 Stadium stadium = new Stadium()
                 {
-                    Name = stadiumData.Stadium,
-                    City = stadiumData.City,
+                    Name = stadiumData.StadiumOfficialName,
                     Latitude = stadiumData.Latitude,
                     Longitude = stadiumData.Longitude
                 };
@@ -64,10 +63,10 @@ namespace Application.Jobs
 
             foreach (var team in allTeams)
             {
-                var stadiumData = stadiumDataList.Where(sd => sd.Team == team.Name).SingleOrDefault();
+                var stadiumData = stadiumDataList.Where(sd => sd.TeamName == team.Name).SingleOrDefault();
                 if (stadiumData != null)
                 {
-                    var stadium = allStadiums.Where(s => s.Name == stadiumData.Stadium).Single();
+                    var stadium = allStadiums.Where(s => s.Name == stadiumData.StadiumOfficialName).Single();
                     team.StadiumId = stadium.Id;
                 }
             }

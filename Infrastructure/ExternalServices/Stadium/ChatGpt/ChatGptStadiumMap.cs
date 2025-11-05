@@ -12,11 +12,9 @@ namespace Infrastructure.ExternalServices.Stadium.ChatGpt
     {
         public ChatGptStadiumMap()
         {
-            Map(m => m.Team).Name("Team");
+            Map(m => m.TeamName).Name("TeamName");
             Map(m => m.TeamFullName).Name("TeamFullName");
-            Map(m => m.Stadium).Name("Stadium");
-            Map(m => m.City).Name("City");
-            Map(m => m.Country).Name("Country");
+            Map(m => m.StadiumOfficialName).Name("StadiumOfficialName");
             Map(m => m.Latitude).Name("Latitude");
             Map(m => m.Longitude).Name("Longitude");
         }

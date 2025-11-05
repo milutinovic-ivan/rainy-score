@@ -1,16 +1,17 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Quartz;
-using Application.Intefraces;
+﻿using Application.Intefraces;
 using Application.Jobs;
 using Domain.Interfaces;
 using Infrastructure.ExternalServices.FootballData;
+using Infrastructure.ExternalServices.Stadium.ChatGpt;
 using Infrastructure.ExternalServices.WeatherApi;
 using Infrastructure.Persistence;
 using Infrastructure.Repositories;
-using System;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Infrastructure.ExternalServices.Stadium.ChatGpt;
+using Quartz;
+using System;
+using System.Reflection;
 
 namespace Infrastructure
 {
@@ -40,6 +41,8 @@ namespace Infrastructure
             });
 
             services.AddQuartzHostedService(opt => opt.WaitForJobsToComplete = true);
+
+            services.AddAutoMapper(cfg => cfg.AddMaps(Assembly.GetExecutingAssembly()));
 
             return services;
         }
