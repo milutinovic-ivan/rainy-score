@@ -1,8 +1,11 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Domain.Entities;
+﻿using Domain.Entities;
 using Domain.Interfaces;
-using System.Reflection.Metadata.Ecma335;
 using Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Internal;
+using Microsoft.EntityFrameworkCore.Query;
+using System.Linq.Expressions;
+using System.Reflection.Metadata.Ecma335;
 using System.Threading.Tasks;
 
 namespace Infrastructure.Repositories
@@ -19,6 +22,11 @@ namespace Infrastructure.Repositories
         public async Task<IEnumerable<T>> GetAllAsync()
         {
             return await _context.Set<T>().ToListAsync();
+        }
+
+        public IQueryable<T> GetQuery()
+        {
+            return _context.Set<T>().AsQueryable();
         }
 
         public async Task<T?> GetByIdAsync(int id)

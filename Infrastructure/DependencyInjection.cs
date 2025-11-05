@@ -10,6 +10,7 @@ using Infrastructure.Repositories;
 using System;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Infrastructure.ExternalServices.Stadium.ChatGpt;
 
 namespace Infrastructure
 {
@@ -26,12 +27,16 @@ namespace Infrastructure
 
             services.AddScoped<IMatchHistoryService, FootballDataMatchHistoryService>();
 
+            services.AddScoped<IStadiumService, ChatGptStadiumService>();
+
             services.AddQuartz(options =>
             {
-                var jobKey = new JobKey("MatchHistoryImportJob");
+                var matchHistoryImportJobKey = new JobKey("MatchHistoryImportJob");
+                var stadiumImportJobKey = new JobKey("StadiumImportJob");
 
                 //StoreDurably if I want just to run job from api endpoint without scheduler
-                options.AddJob<MatchHistoryImportJob>(jobKey, j => j.StoreDurably());
+                options.AddJob<MatchHistoryImportJob>(matchHistoryImportJobKey, j => j.StoreDurably());
+                options.AddJob<StadiumImportJob>(stadiumImportJobKey, j => j.StoreDurably());
             });
 
             services.AddQuartzHostedService(opt => opt.WaitForJobsToComplete = true);

@@ -6,7 +6,7 @@ namespace Domain.Entities
     {
         public string Name { get; set; } = string.Empty;
         public string? ShortCode { get; set; }
-        public int StadiumId { get; set; }
+        public int? StadiumId { get; set; }
         public Stadium Stadium { get; set; } = null!;
 
         [InverseProperty("HomeTeam")]

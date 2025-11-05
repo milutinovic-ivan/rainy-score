@@ -68,10 +68,6 @@ namespace Infrastructure.Persistence
                 new League { Id = 22, CountryId = 11, Name = "Ethniki Katigoria", ShortCode = "G1", CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc) }
                 );
 
-            modelBuilder.Entity<Stadium>().HasData(
-                new Stadium { Id = 1, Name = "Camp Nou", Latitude = 41.3809m, Longitude = 2.1228m, CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc) }
-                );
-
             base.OnModelCreating(modelBuilder);
         }
     }   

@@ -52,8 +52,7 @@ namespace Application.Jobs
                     var team = new Team
                     {
                         Name = match.HomeTeam,
-                        //TODO stadiums should be added
-                        StadiumId = 1
+                        StadiumId = null
                     };
 
                     teamsToInsert.Add(team);
@@ -66,7 +65,7 @@ namespace Application.Jobs
                     var team = new Team
                     {
                         Name = match.AwayTeam,
-                        StadiumId = 1
+                        StadiumId = null
                     };
 
                     teamsToInsert.Add(team);

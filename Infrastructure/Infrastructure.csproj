@@ -7,6 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="ExternalServices\StadiumData\**" />
+    <EmbeddedResource Remove="ExternalServices\StadiumData\**" />
+    <None Remove="ExternalServices\StadiumData\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="AutoMapper" Version="15.0.1" />
     <PackageReference Include="CsvHelper" Version="33.1.0" />
     <PackageReference Include="Microsoft.AspNetCore.Hosting.Abstractions" Version="2.3.0" />
@@ -33,6 +39,7 @@
 
   <ItemGroup>
     <Folder Include="ExternalServices\FootballData\Files\" />
+    <Folder Include="ExternalServices\Stadium\ChatGpt\Files\" />
   </ItemGroup>
 
 </Project>
