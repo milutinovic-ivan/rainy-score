@@ -10,6 +10,7 @@ namespace Infrastructure.Persistence
         public DbSet<Team> Teams { get; set; }
         public DbSet<Stadium> Stadiums { get; set; }
         public DbSet<MatchDetails> MatchDetails { get; set; }
+        public DbSet<WeatherCondition> WeatherConditions { get; set; }
 
         public ScoreDbContext(DbContextOptions<ScoreDbContext> options) : base(options) { }
 

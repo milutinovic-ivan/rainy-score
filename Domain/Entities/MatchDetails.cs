@@ -19,6 +19,8 @@ namespace Domain.Entities
         [ForeignKey(nameof(AwayTeamId))]
         [InverseProperty("AwayMatches")]
         public Team AwayTeam { get; set; } = null!;
+        //for now, it can have WeatherCondition just from one service, latter could be many
+        public WeatherCondition? WeatherCondition { get; set; }
         public int FullTimeHomeGoals { get; set; }
         public int FullTimeAwayGoals { get; set; }
         public char FullTimeWiner { get; set; }

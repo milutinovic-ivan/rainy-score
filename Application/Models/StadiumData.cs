@@ -9,9 +9,9 @@ namespace Application.Models
     public class StadiumData
     {
         public string TeamName { get; set; } = string.Empty;
-        public string TeamFullName { get; set; } = string.Empty;
-        public string StadiumOfficialName { get; set; } = string.Empty;
-        public decimal Latitude { get; set; }
-        public decimal Longitude { get; set; }
+        public string? TeamFullName { get; set; }
+        public string? StadiumOfficialName { get; set; }
+        public decimal? Latitude { get; set; }
+        public decimal? Longitude { get; set; }
     }
 }

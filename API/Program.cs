@@ -1,3 +1,4 @@
+using Application;
 using Application.Intefraces;
 using Infrastructure;
 using Infrastructure.ExternalServices.WeatherApi;
@@ -16,6 +17,8 @@ builder.Services.AddAutoMapper(cfg => cfg.LicenseKey = "eyJhbGciOiJSUzI1NiIsImtp
     typeof(Program).Assembly);
 
 builder.Services.AddInfrastructure(builder.Configuration);
+
+builder.Services.AddApplication(builder.Configuration);
 
 var app = builder.Build();
 
