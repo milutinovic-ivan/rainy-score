@@ -3,8 +3,14 @@ using Application.Intefraces;
 using Infrastructure;
 using Infrastructure.ExternalServices.WeatherApi;
 using Microsoft.Extensions.DependencyInjection;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Replace default logging with Serilog
+builder.Host.UseSerilog((ctx, lc) =>
+    lc.ReadFrom.Configuration(ctx.Configuration)
+      .Enrich.FromLogContext());
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -21,6 +27,9 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApplication(builder.Configuration);
 
 var app = builder.Build();
+
+// Request logging (HTTP method/path/status + duration)
+app.UseSerilogRequestLogging();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

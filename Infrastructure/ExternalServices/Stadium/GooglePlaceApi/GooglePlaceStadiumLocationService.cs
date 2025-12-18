@@ -1,13 +1,14 @@
 ﻿using Application.Intefraces;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http.Json;
+using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace Infrastructure.ExternalServices.Stadium.GooglePlaceApi
 {
@@ -17,10 +18,12 @@ namespace Infrastructure.ExternalServices.Stadium.GooglePlaceApi
 
         const string URL = "https://places.googleapis.com/v1/places:searchText";
         const string API_KEY = "AIzaSyA_3dslJZNTmzAxKeigy717v2lbIRqKyxo";
+        private readonly ILogger<GooglePlaceStadiumLocationService> _logger;
 
-        public GooglePlaceStadiumLocationService(IHttpClientFactory factory)
+        public GooglePlaceStadiumLocationService(IHttpClientFactory factory, ILogger<GooglePlaceStadiumLocationService> logger)
         {
             _httpClient = factory.CreateClient();
+            _logger = logger;
         }
 
         public async Task<(decimal? latitude, decimal? longitude)> GetStadiumLocationAsync(string stadiumName)
@@ -41,7 +44,8 @@ namespace Infrastructure.ExternalServices.Stadium.GooglePlaceApi
             // Throw if not 2xx
             if (!response.IsSuccessStatusCode)
             {
-                Console.WriteLine($"Error: {response.StatusCode.ToString()}, {response.Content.ToString}");
+                _logger.LogError($"Error while sending google place api request: {req.Content.ToString} {response.StatusCode.ToString()}, {response.Content.ToString}");
+                return (null, null);
             }
 
             // Read response

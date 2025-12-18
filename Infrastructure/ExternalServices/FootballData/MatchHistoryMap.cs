@@ -10,8 +10,8 @@ namespace Infrastructure.ExternalServices.FootballData
             Map(m => m.LeagueDivision).Name("Div");
             Map(m => m.MatchDate).Name("Date").TypeConverterOption.Format("dd/MM/yyyy");
             Map(m => m.MatchTime).Name("Time").TypeConverterOption.Format("HH:mm");
-            Map(m => m.HomeTeam).Name("HomeTeam");
-            Map(m => m.AwayTeam).Name("AwayTeam");
+            Map(m => m.HomeTeam).Name("HomeTeam").Convert(args => NormalizeTeamName(args.Row.GetField("HomeTeam")));
+            Map(m => m.AwayTeam).Name("AwayTeam").Convert(args => NormalizeTeamName(args.Row.GetField("AwayTeam")));
             Map(m => m.FullTimeHomeGoals).Name("FTHG");
             Map(m => m.FullTimeAwayGoals).Name("FTAG");
             Map(m => m.FullTimeWiner).Name("FTR");
@@ -27,6 +27,15 @@ namespace Infrastructure.ExternalServices.FootballData
             Map(m => m.AwayWinOdds).Name("AvgCA");
             Map(m => m.GoalsOver25).Name("AvgC>2.5");
             Map(m => m.GoalsUnder25).Name("AvgC<2.5");
+        }
+
+        private string NormalizeTeamName(string? input)
+        {
+            return input?
+                .Replace("’", "")   // Right single quotation mark
+                .Replace("‘", "")   // Left single quotation mark
+                .Replace("�", "")   // Replacement character
+            ?? string.Empty;
         }
     }
 }
