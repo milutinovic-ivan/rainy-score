@@ -44,7 +44,9 @@ namespace Infrastructure.ExternalServices.Stadium.GooglePlaceApi
             // Throw if not 2xx
             if (!response.IsSuccessStatusCode)
             {
-                _logger.LogError($"Error while sending google place api request: {req.Content.ToString} {response.StatusCode.ToString()}, {response.Content.ToString}");
+                _logger.LogError($"Error while sending google place api request: {req.Content.ToString} response: " +
+                    $"{response.StatusCode.ToString()}, {response.Content.ToString()}");
+
                 return (null, null);
             }
 

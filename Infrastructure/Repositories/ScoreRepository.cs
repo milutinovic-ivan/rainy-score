@@ -19,9 +19,11 @@ namespace Infrastructure.Repositories
             _context = context;
         }
 
-        public async Task<IEnumerable<T>> GetAllAsync()
+        public async Task<IEnumerable<T>> GetAllAsync(Func<IQueryable<T>, IQueryable<T>>? func = null)
         {
-            return await _context.Set<T>().ToListAsync();
+            var query = _context.Set<T>().AsQueryable();
+            var resultQuery = func == null ? query : func(query);
+            return await resultQuery.ToListAsync();
         }
 
         public IQueryable<T> GetQuery()

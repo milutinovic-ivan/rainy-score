@@ -14,14 +14,9 @@ namespace Domain.Entities
         public decimal Longitude { get; set; }
         public decimal Temperature2m { get; set; }
         public decimal DewPoint2m { get; set; }
-        public decimal ApparentTemperature { get; set; }
-        public decimal SurfacePressure { get; set; }
         public decimal Precipitation { get; set; }
-        public decimal Rain { get; set; }
-        public decimal Snowfall { get; set; }
         public int CloudCover { get; set; }
         public int CloudCoverLow { get; set; }
-        public decimal Et0FaoEvapotranspiration { get; set; }
         public decimal WindSpeed10m { get; set; }
         public decimal SunshineDuration { get; set; }
         public int WeatherCode { get; set; }

@@ -19,6 +19,9 @@ namespace Infrastructure.Persistence
             //indexes
             modelBuilder.Entity<Country>().HasIndex(c => c.ShortCode).IsUnique();
 
+            //to confirm 1 to 1 relationship in database
+            modelBuilder.Entity<WeatherCondition>().HasIndex(w => w.MatchDetailsId).IsUnique();
+
             //data seeding
             modelBuilder.Entity<Country>().HasData(
                 new Country { Id = 1, Name = "England", ShortCode = "ENG", CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc) },

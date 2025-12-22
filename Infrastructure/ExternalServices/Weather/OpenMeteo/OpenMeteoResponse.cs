@@ -24,14 +24,9 @@ namespace Infrastructure.ExternalServices.Weather.OpenMeteo
         public string time { get; set; }
         public string temperature_2m { get; set; }
         public string dew_point_2m { get; set; }
-        public string apparent_temperature { get; set; }
-        public string surface_pressure { get; set; }
         public string precipitation { get; set; }
-        public string rain { get; set; }
-        public string snowfall { get; set; }
         public string cloud_cover { get; set; }
         public string cloud_cover_low { get; set; }
-        public string et0_fao_evapotranspiration { get; set; }
         public string wind_speed_10m { get; set; }
         public string sunshine_duration { get; set; }
         public string weather_code { get; set; }
@@ -42,14 +37,9 @@ namespace Infrastructure.ExternalServices.Weather.OpenMeteo
         public string[] time { get; set; }
         public decimal[] temperature_2m { get; set; }
         public decimal[] dew_point_2m { get; set; }
-        public decimal[] apparent_temperature { get; set; }
-        public decimal[] surface_pressure { get; set; }
         public decimal[] precipitation { get; set; }
-        public decimal[] rain { get; set; }
-        public decimal[] snowfall { get; set; }
         public int[] cloud_cover { get; set; }
         public int[] cloud_cover_low { get; set; }
-        public decimal[] et0_fao_evapotranspiration { get; set; }
         public decimal[] wind_speed_10m { get; set; }
         public decimal[] sunshine_duration { get; set; }
         public int[] weather_code { get; set; }
