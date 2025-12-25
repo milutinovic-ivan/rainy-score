@@ -16,7 +16,7 @@ namespace Application.Jobs
 {
     public class WeatherHistoryImportJob : IJob
     {
-        const int MAX_SERVICE_REQUESTS_PER_EXECUTION = 2;
+        const int MAX_SERVICE_REQUESTS_PER_EXECUTION = 4000;
 
         private readonly ILogger<WeatherHistoryImportJob> _logger;
         private readonly IRepository<MatchDetails> _matchDetailsRepository;

@@ -54,8 +54,10 @@ namespace Infrastructure.ExternalServices.Weather.OpenMeteo
         {
             //how long before and after match start we summarize rain or snow, shoud be more exact with minutes here
             int hourFrom = time.Hour - ANALYZE_LAST_HOURS;
-            int hourTo = time.Hour + 2;
-            int hourDuring = time.Hour + 1;
+            //not calculate hour when match is finished or almost finished 
+            int hourTo = time.Minute < 30 ? time.Hour + 1 : time.Hour + 2;
+            //based on minute calculate real match during hour
+            int hourDuring = time.Minute < 30 ? time.Hour : time.Hour + 1;
 
             var openMeteoResponse = JsonSerializer.Deserialize<OpenMeteoResponse>(response);
 
@@ -65,7 +67,7 @@ namespace Infrastructure.ExternalServices.Weather.OpenMeteo
             weatherConditionsData.Longitude = openMeteoResponse.longitude;
             weatherConditionsData.Temperature2m = openMeteoResponse.hourly.temperature_2m[hourDuring];
             weatherConditionsData.DewPoint2m = openMeteoResponse.hourly.dew_point_2m[hourDuring];
-            weatherConditionsData.Precipitation = openMeteoResponse.hourly.precipitation.Skip(hourFrom).Take(hourTo - hourFrom).Sum();
+            weatherConditionsData.Precipitation = openMeteoResponse.hourly.precipitation.Skip(hourFrom).Take(hourTo - hourFrom + 1).Sum();
             weatherConditionsData.CloudCover = openMeteoResponse.hourly.cloud_cover[hourDuring];
             weatherConditionsData.CloudCoverLow = openMeteoResponse.hourly.cloud_cover_low[hourDuring];
             weatherConditionsData.WindSpeed10m = openMeteoResponse.hourly.wind_speed_10m[hourDuring];
