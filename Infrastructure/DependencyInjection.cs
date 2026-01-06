@@ -1,9 +1,7 @@
-﻿using Application.Builders;
-using Application.Intefraces;
+﻿using Application.Intefraces;
 using Application.Jobs;
 using Domain.Interfaces;
 using Infrastructure.ExternalServices.FootballData;
-using Infrastructure.ExternalServices.Stadium.ChatGpt;
 using Infrastructure.ExternalServices.Stadium.GooglePlaceApi;
 using Infrastructure.ExternalServices.Weather.OpenMeteo;
 using Infrastructure.ExternalServices.WeatherApi;
@@ -31,13 +29,9 @@ namespace Infrastructure
 
             services.AddScoped<IMatchHistoryService, FootballDataMatchHistoryService>();
 
-            services.AddScoped<IStadiumDataBuilder, StadiumDataBuilder>();
-
-            services.AddScoped<IStadiumNameService, ChatGptStadiumNameService>();
-            
-            services.AddScoped<IStadiumLocationService, GooglePlaceStadiumLocationService>();
-
             services.AddScoped<IWeatherHistoryService, OpenMeteoWeatherService>();
+
+            services.AddScoped<IStadiumDataService, GooglePlaceStadiumDataService>();
 
             services.AddQuartz(options =>
             {

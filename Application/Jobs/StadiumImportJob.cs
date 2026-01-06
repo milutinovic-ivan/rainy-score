@@ -2,13 +2,6 @@
 using Domain.Entities;
 using Domain.Interfaces;
 using Quartz;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
-using Application.Models;
 using Microsoft.Extensions.Logging;
 
 namespace Application.Jobs
@@ -17,17 +10,17 @@ namespace Application.Jobs
     {
         private readonly IRepository<Stadium> _stadiumRepository;
         private readonly IRepository<Team> _teamRepository;
-        private readonly IStadiumDataBuilder _stadiumDataBuilder;
+        private readonly IStadiumDataService _stadiumDataService;
         private readonly ILogger<StadiumImportJob> _logger;
 
         public StadiumImportJob(IRepository<Stadium> stadiumRepository,
-            IRepository<Team> teamRepository, 
-            IStadiumDataBuilder stadiumDataBuilder,
+            IRepository<Team> teamRepository,
+            IStadiumDataService stadiumDataService,
             ILogger<StadiumImportJob> logger)
         {
             _stadiumRepository = stadiumRepository;
             _teamRepository = teamRepository;
-            _stadiumDataBuilder = stadiumDataBuilder;
+            _stadiumDataService = stadiumDataService;
             _logger = logger;
         }
 
@@ -35,78 +28,45 @@ namespace Application.Jobs
         {
             _logger.LogInformation("Job started..");
 
-            //remove reference to Stadium before delete all Stadiums
-            await _teamRepository.GetQuery()
-                .ExecuteUpdateAsync(setters =>
-                    setters.SetProperty(t => t.StadiumId, t => null));
-
-            //delete all data from Stadium table
-            await _stadiumRepository.DeleteAll();
-
             var allTeams = await _teamRepository.GetAllAsync();
 
-
-            var stadiumDataList = new List<StadiumData>();
-
-            //get stadium data from service, one by one
             foreach (Team team in allTeams)
             {
-                stadiumDataList.Add(await _stadiumDataBuilder.BuildAsync(team.Name));
-                await Task.Delay(TimeSpan.FromMilliseconds(200));
-            }
-
-            //insert all stadiums into database
-            var stadiumToInsert = new List<Stadium>();
-
-            foreach(var stadiumData in stadiumDataList)
-            {
-                if(stadiumData.StadiumOfficialName == null)
+                //just for teams without stadion initialized
+                if(team.StadiumId == null)
                 {
-                    continue;
-                }
+                    var stadiumData = await _stadiumDataService.GetStadiumDataAsync(team.Name);
 
-                if(!stadiumToInsert.Exists(s => s.Name == stadiumData.StadiumOfficialName))
-                {
-                    Stadium stadium = new Stadium()
+                    if(stadiumData != null)
                     {
-                        Name = stadiumData.StadiumOfficialName,
-                        Latitude = stadiumData.Latitude.HasValue ? Math.Round(stadiumData.Latitude.Value, 5) : null,
-                        Longitude = stadiumData.Longitude.HasValue ? Math.Round(stadiumData.Longitude.Value, 5) : null,
-                    };
+                        Stadium stadium = new Stadium()
+                        {
+                            Name = stadiumData.Name ?? string.Empty,
+                            Latitude = stadiumData.Latitude.HasValue ? Math.Round(stadiumData.Latitude.Value, 5) : null,
+                            Longitude = stadiumData.Longitude.HasValue ? Math.Round(stadiumData.Longitude.Value, 5) : null,
+                        };
 
-                    stadiumToInsert.Add(stadium);
-                }
-            }
+                        //add stadium
+                        await _stadiumRepository.AddAsync(stadium);
 
-            //insert all stadiums at once
-            await _stadiumRepository.AddRangeAsync(stadiumToInsert);
-            await _stadiumRepository.SaveChangesAsync();
+                        //add reference to team
+                        team.Stadium = stadium;
+                        _teamRepository.Update(team);
 
-            //update all teams with StadiumId
-            var allStadiums = await _stadiumRepository.GetAllAsync();
-
-            try
-            {
-                foreach (var team in allTeams)
-                {
-                    var stadiumData = stadiumDataList.Where(sd => sd.TeamName == team.Name).SingleOrDefault();
-                    if (stadiumData != null && stadiumData.StadiumOfficialName != null)
-                    {
-                        var stadium = allStadiums.Where(s => s.Name == stadiumData.StadiumOfficialName).Single();
-                        team.StadiumId = stadium.Id;
+                        _logger.LogInformation($"added stadium: {stadium.Name}, latitude: {stadium.Latitude}, longitude: {stadium.Longitude} " +
+                            $"for team: {team.Name}");
                     }
                     else
                     {
-                        _logger.LogError($"No stadium data for team: {team.Name}");
+                        _logger.LogWarning($"no stadium data for team: {team.Name}");
                     }
+
+                    await Task.Delay(TimeSpan.FromMilliseconds(200));
                 }
-            }
-            catch(Exception ex)
-            {
-                _logger.LogCritical($"Error: {ex.Message}");
             }
 
             await _teamRepository.SaveChangesAsync();
+            await _stadiumRepository.SaveChangesAsync();
 
             _logger.LogInformation("Job finished..");
         }

@@ -1,32 +1,33 @@
 ﻿using Application.Intefraces;
-using Microsoft.EntityFrameworkCore.Metadata;
+using Application.Models;
+using CsvHelper;
 using Microsoft.Extensions.Logging;
+using Quartz.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http.Json;
-using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Infrastructure.ExternalServices.Stadium.GooglePlaceApi
 {
-    public class GooglePlaceStadiumLocationService : IStadiumLocationService
+    public class GooglePlaceStadiumDataService : IStadiumDataService
     {
         HttpClient _httpClient;
 
         const string URL = "https://places.googleapis.com/v1/places:searchText";
         const string API_KEY = "AIzaSyA_3dslJZNTmzAxKeigy717v2lbIRqKyxo";
-        private readonly ILogger<GooglePlaceStadiumLocationService> _logger;
+        private readonly ILogger<GooglePlaceStadiumDataService> _logger;
 
-        public GooglePlaceStadiumLocationService(IHttpClientFactory factory, ILogger<GooglePlaceStadiumLocationService> logger)
+
+        public GooglePlaceStadiumDataService(IHttpClientFactory factory, ILogger<GooglePlaceStadiumDataService> logger)
         {
             _httpClient = factory.CreateClient();
             _logger = logger;
         }
 
-        public async Task<(decimal? latitude, decimal? longitude)> GetStadiumLocationAsync(string stadiumName)
+        public async Task<StadiumData?> GetStadiumDataAsync(string teamName)
         {
             using var req = new HttpRequestMessage(HttpMethod.Post, URL);
             // Required headers
@@ -34,7 +35,7 @@ namespace Infrastructure.ExternalServices.Stadium.GooglePlaceApi
             req.Headers.Add("X-Goog-FieldMask", "places.displayName,places.location,places.types");
 
             req.Content = new StringContent(
-                System.Text.Json.JsonSerializer.Serialize(new { textQuery = $"{stadiumName} stadium" }),
+                System.Text.Json.JsonSerializer.Serialize(new { textQuery = $"{teamName} stadium" }),
                 Encoding.UTF8,
                 "application/json");
 
@@ -47,7 +48,7 @@ namespace Infrastructure.ExternalServices.Stadium.GooglePlaceApi
                 _logger.LogError($"Error while sending google place api request: {req.Content.ToString} response: " +
                     $"{response.StatusCode.ToString()}, {response.Content.ToString()}");
 
-                return (null, null);
+                return null;
             }
 
             // Read response
@@ -60,22 +61,34 @@ namespace Infrastructure.ExternalServices.Stadium.GooglePlaceApi
 
             var stadiumResponse = JsonSerializer.Deserialize<StadiumResponse>(responseJson, options);
 
-            return GetBestCordinates(stadiumResponse);
+            return GetBestStadiumMatch(stadiumResponse);
         }
 
-        private (decimal? latitude, decimal? longitude) GetBestCordinates(StadiumResponse? stadiumResponse)
+        private StadiumData? GetBestStadiumMatch(StadiumResponse? stadiumResponse)
         {
             //no places found
             if (stadiumResponse?.Places == null || stadiumResponse.Places.Count == 0)
             {
-                return (null, null);
+                return null;
             }
 
             //pick first place whith stadium type, or just take first place
             var stadiumPlace = stadiumResponse.Places.FirstOrDefault(p => p.Types?.Contains("stadium") == true)
                 ?? stadiumResponse.Places.First();
 
-            return stadiumPlace.Location != null ? (stadiumPlace.Location.Latitude, stadiumPlace.Location.Longitude) : (null, null); 
+            if(stadiumPlace.Location != null && stadiumPlace.DisplayName != null)
+            {
+                return new StadiumData
+                {
+                    Name = stadiumPlace.DisplayName.Text,
+                    Latitude = stadiumPlace.Location.Latitude,
+                    Longitude = stadiumPlace.Location.Longitude
+                };
+            }
+            else
+            {
+                return null;
+            }
         }
 
         private class StadiumResponse

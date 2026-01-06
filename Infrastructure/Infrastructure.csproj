@@ -39,7 +39,6 @@
 
   <ItemGroup>
     <Folder Include="ExternalServices\FootballData\Files\" />
-    <Folder Include="ExternalServices\Stadium\ChatGpt\Files\" />
   </ItemGroup>
 
 </Project>

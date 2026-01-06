@@ -8,9 +8,8 @@ namespace Application.Models
 {
     public class StadiumData
     {
+        public string Name { get; set; } = string.Empty;
         public string TeamName { get; set; } = string.Empty;
-        public string? TeamFullName { get; set; }
-        public string? StadiumOfficialName { get; set; }
         public decimal? Latitude { get; set; }
         public decimal? Longitude { get; set; }
     }
