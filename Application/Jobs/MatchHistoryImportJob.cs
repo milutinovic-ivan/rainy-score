@@ -30,98 +30,123 @@ namespace Application.Jobs
 
         public async Task Execute(IJobExecutionContext context)
         {
+            _logger.LogInformation("Job started");
+
             var stopwatch = new Stopwatch();
             stopwatch.Start();
-
-            //first delete all data from tables Teams and MatchDetails
-            await _teamRepository.DeleteAll();
-            await _matchDetailsRepository.DeleteAll();
             
-            var matches = await _matchHistoryService.GetMatchHistoriesAsync();
-
-            var teamsToInsert = new List<Team>();
+            //call service implementation to get list of match details
+            var matchDetailsDataList = await _matchHistoryService.GetMatchDetailsHistoriesAsync();
 
             //insert Teams
-            foreach (var match in matches)
-            {
-                var teamExists = teamsToInsert.Exists(t => t.Name == match.HomeTeam);
+            var existingTeams = await _teamRepository.GetAllAsync();
+            var teamsToInsert = new List<Team>();
 
-                //add teams if doesn't exists
+            foreach (var matchDetailsData in matchDetailsDataList)
+            {
+                //add home team just if already not exists
+                var teamExists = existingTeams.Any(t => t.Name == matchDetailsData.HomeTeam);
+
                 if (!teamExists)
                 {
                     var team = new Team
                     {
-                        Name = match.HomeTeam,
+                        Name = matchDetailsData.HomeTeam,
                         StadiumId = null
                     };
 
                     teamsToInsert.Add(team);
                 }
 
-                teamExists = teamsToInsert.Exists(t => t.Name == match.AwayTeam);
+                //add away team just if already not exists
+                teamExists = existingTeams.Any(t => t.Name == matchDetailsData.AwayTeam);
 
                 if (!teamExists)
                 {
                     var team = new Team
                     {
-                        Name = match.AwayTeam,
+                        Name = matchDetailsData.AwayTeam,
                         StadiumId = null
                     };
 
                     teamsToInsert.Add(team);
                 }
             }
+
             //save all at once
-            await _teamRepository.AddRangeAsync(teamsToInsert);
-            await _teamRepository.SaveChangesAsync();
+            if(teamsToInsert.Count > 0)
+            {
+                await _teamRepository.AddRangeAsync(teamsToInsert);
+                await _teamRepository.SaveChangesAsync();
+            }
+
+            _logger.LogInformation($"Teams inserted count: {teamsToInsert.Count}");
 
 
             //insert MatchDetails
-            var matchDetailsToInsert = new List<MatchDetails>();
+            var existingMatchDetails = await _matchDetailsRepository.GetAllAsync();
             var allLeagues = await _leagueRepository.GetAllAsync();
             var allTeams = await _teamRepository.GetAllAsync();
 
-            foreach (var match in matches) 
+            var matchDetailsToInsert = new List<MatchDetails>();
+
+            int matchSkipped = 0;
+
+            foreach (var matchDetailsData in matchDetailsDataList) 
             {
-                var league = allLeagues.Single(l => l.ShortCode == match.LeagueDivision);
-                var homeTeam = allTeams.Single(t => t.Name == match.HomeTeam);
-                var awayTeam = allTeams.Single(t => t.Name == match.AwayTeam);
+                var league = allLeagues.Single(l => l.ShortCode == matchDetailsData.LeagueDivision);
+                var homeTeam = allTeams.Single(t => t.Name == matchDetailsData.HomeTeam);
+                var awayTeam = allTeams.Single(t => t.Name == matchDetailsData.AwayTeam);
+
+                //if MatchDetails exists, skip match
+                if(existingMatchDetails.Any(md => 
+                md.LeagueId == league.Id && 
+                md.HomeTeamId == homeTeam.Id && 
+                md.AwayTeamId == awayTeam.Id &&
+                md.Season == matchDetailsData.MatchDate.Year &&
+                md.MatchDate == matchDetailsData.MatchDate))
+                {
+                    matchSkipped++;
+                    continue;
+                }
 
                 var matchDetails = new MatchDetails
                 {
                     LeagueId = league.Id,
-                    Season = match.MatchDate.Year,
-                    MatchDate = match.MatchDate,
-                    MatchTime = match.MatchTime,
+                    Season = matchDetailsData.MatchDate.Year,
+                    MatchDate = matchDetailsData.MatchDate,
+                    MatchTime = matchDetailsData.MatchTime,
                     HomeTeamId = homeTeam.Id,
                     AwayTeamId = awayTeam.Id,
-                    FullTimeHomeGoals = match.FullTimeHomeGoals,
-                    FullTimeAwayGoals = match.FullTimeAwayGoals,
-                    FullTimeWiner = match.FullTimeWiner,
-                    HalfTimeHomeGoals = match.HalfTimeHomeGoals,
-                    HalfTimeAwayGoals= match.HalfTimeAwayGoals,
-                    HalfTimeWiner= match.HalfTimeWiner,
-                    HomeShots = match.HomeShots,
-                    AwayShots = match.AwayShots,
-                    HomeShotsOnTarget = match.HomeShotsOnTarget,
-                    AwayShotsOnTarget = match.AwayShotsOnTarget,
-                    HomeWinOdds = match.HomeWinOdds,
-                    DrawWinOdds = match.DrawWinOdds,
-                    AwayWinOdds = match.AwayWinOdds,
-                    GoalsOver25 = match.GoalsOver25,
-                    GoalsUnder25 = match.GoalsUnder25
+                    FullTimeHomeGoals = matchDetailsData.FullTimeHomeGoals,
+                    FullTimeAwayGoals = matchDetailsData.FullTimeAwayGoals,
+                    FullTimeWiner = matchDetailsData.FullTimeWiner,
+                    HalfTimeHomeGoals = matchDetailsData.HalfTimeHomeGoals,
+                    HalfTimeAwayGoals= matchDetailsData.HalfTimeAwayGoals,
+                    HalfTimeWiner= matchDetailsData.HalfTimeWiner,
+                    HomeWinOdds = matchDetailsData.HomeWinOdds,
+                    DrawWinOdds = matchDetailsData.DrawWinOdds,
+                    AwayWinOdds = matchDetailsData.AwayWinOdds,
+                    GoalsOver25 = matchDetailsData.GoalsOver25,
+                    GoalsUnder25 = matchDetailsData.GoalsUnder25,
+                    IsHistory = matchDetailsData.IsHistory
                 };
 
                 matchDetailsToInsert.Add(matchDetails);
             }
 
             //insert all at once
-            await _matchDetailsRepository.AddRangeAsync(matchDetailsToInsert);
-            await _matchDetailsRepository.SaveChangesAsync();
+            if(matchDetailsToInsert.Count > 0)
+            {
+                await _matchDetailsRepository.AddRangeAsync(matchDetailsToInsert);
+                await _matchDetailsRepository.SaveChangesAsync();
+            }
+
+            _logger.LogInformation($"Match details inserted count: {matchDetailsToInsert.Count}, skipped: {matchSkipped}");
 
             stopwatch.Stop();
             TimeSpan elapsed = stopwatch.Elapsed;
-            Console.WriteLine($"Elapsed time: {elapsed.TotalMilliseconds} ms");
+            _logger.LogInformation($"Job finished... Elapsed time: {elapsed.TotalSeconds} s");
         }
     }
 }

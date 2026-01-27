@@ -4,6 +4,6 @@ namespace Application.Intefraces
 {
     public interface IMatchHistoryService
     {
-        Task<List<MatchHistoryData>> GetMatchHistoriesAsync();
+        Task<List<MatchDetailsData>> GetMatchDetailsHistoriesAsync();
     }
 }

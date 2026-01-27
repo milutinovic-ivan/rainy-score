@@ -20,7 +20,7 @@ namespace Infrastructure.ExternalServices.FootballData
             _hostEnvironment = hostEnvironment;
         }
 
-        public Task<List<MatchHistoryData>> GetMatchHistoriesAsync()
+        public Task<List<MatchDetailsData>> GetMatchDetailsHistoriesAsync()
         {
             return Task.Run(() =>
             {
@@ -42,7 +42,7 @@ namespace Infrastructure.ExternalServices.FootballData
 
                 var files = Directory.GetFiles(path);
 
-                List<MatchHistoryData> matchHistories = new List<MatchHistoryData>();
+                List<MatchDetailsData> matchHistories = new List<MatchDetailsData>();
 
                 int failImportsCount = 0;
 
@@ -57,8 +57,9 @@ namespace Infrastructure.ExternalServices.FootballData
                     {
                         try
                         {
-                            var record = csv.GetRecord<MatchHistoryData>();
-                            matchHistories.Add(record);
+                            var matchDetailsData = csv.GetRecord<MatchDetailsData>();
+                            matchDetailsData.IsHistory = true;
+                            matchHistories.Add(matchDetailsData);
                         }
                         catch (TypeConverterException)
                         {

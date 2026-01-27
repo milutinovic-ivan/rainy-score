@@ -3,7 +3,7 @@ using Application.Models;
 
 namespace Infrastructure.ExternalServices.FootballData
 {
-    public sealed class MatchHistoryMap : ClassMap<MatchHistoryData>
+    public sealed class MatchHistoryMap : ClassMap<MatchDetailsData>
     {
         public MatchHistoryMap()
         {
@@ -18,10 +18,6 @@ namespace Infrastructure.ExternalServices.FootballData
             Map(m => m.HalfTimeHomeGoals).Name("HTHG");
             Map(m => m.HalfTimeAwayGoals).Name("HTAG");
             Map(m => m.HalfTimeWiner).Name("HTR");
-            Map(m => m.HomeShots).Name("HS").Optional();
-            Map(m => m.AwayShots).Name("AS").Optional();
-            Map(m => m.HomeShotsOnTarget).Name("HST").Optional();
-            Map(m => m.AwayShotsOnTarget).Name("AST").Optional();
             Map(m => m.HomeWinOdds).Name("AvgCH");
             Map(m => m.DrawWinOdds).Name("AvgCD");
             Map(m => m.AwayWinOdds).Name("AvgCA");

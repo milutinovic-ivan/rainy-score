@@ -22,7 +22,7 @@ namespace Infrastructure.ExternalServices.ApiFootball
             _logger = logger;
         }
 
-        public async Task<List<MatchHistoryData>> GetMatchHistoriesAsync()
+        public async Task<List<MatchDetailsData>> GetMatchDetailsHistoriesAsync()
         {
             var url = $"";
 
@@ -38,7 +38,7 @@ namespace Infrastructure.ExternalServices.ApiFootball
 
             var content = await response.Content.ReadAsStringAsync();
 
-            return new List<MatchHistoryData> { };
+            return new List<MatchDetailsData> { };
         }
     }
 }
