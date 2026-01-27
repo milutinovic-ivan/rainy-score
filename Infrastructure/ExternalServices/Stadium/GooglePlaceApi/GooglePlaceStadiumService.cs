@@ -12,16 +12,16 @@ using System.Threading.Tasks;
 
 namespace Infrastructure.ExternalServices.Stadium.GooglePlaceApi
 {
-    public class GooglePlaceStadiumDataService : IStadiumService
+    public class GooglePlaceStadiumService : IStadiumService
     {
         HttpClient _httpClient;
 
         const string URL = "https://places.googleapis.com/v1/places:searchText";
         const string API_KEY = "AIzaSyA_3dslJZNTmzAxKeigy717v2lbIRqKyxo";
-        private readonly ILogger<GooglePlaceStadiumDataService> _logger;
+        private readonly ILogger<GooglePlaceStadiumService> _logger;
 
 
-        public GooglePlaceStadiumDataService(IHttpClientFactory factory, ILogger<GooglePlaceStadiumDataService> logger)
+        public GooglePlaceStadiumService(IHttpClientFactory factory, ILogger<GooglePlaceStadiumService> logger)
         {
             _httpClient = factory.CreateClient();
             _logger = logger;

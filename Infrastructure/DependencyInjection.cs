@@ -31,7 +31,7 @@ namespace Infrastructure
 
             services.AddScoped<IWeatherHistoryService, OpenMeteoWeatherService>();
 
-            services.AddScoped<IStadiumService, GooglePlaceStadiumDataService>();
+            services.AddScoped<IStadiumService, GooglePlaceStadiumService>();
 
             services.AddQuartz(options =>
             {
