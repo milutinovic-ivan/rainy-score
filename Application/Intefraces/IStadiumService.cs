@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Application.Intefraces
 {
-    public interface IStadiumDataService
+    public interface IStadiumService
     {
         Task<StadiumData?> GetStadiumDataAsync(string teamName);
     }

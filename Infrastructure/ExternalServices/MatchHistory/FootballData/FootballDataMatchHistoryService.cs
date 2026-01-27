@@ -9,7 +9,7 @@ using System.Globalization;
 using System.IO;
 using System.Text;
 
-namespace Infrastructure.ExternalServices.FootballData
+namespace Infrastructure.ExternalServices.MatchHistory.FootballData
 {
     public class FootballDataMatchHistoryService : IMatchHistoryService
     {
@@ -38,7 +38,7 @@ namespace Infrastructure.ExternalServices.FootballData
 
                 //import all files from directory
                 var path = Path.GetFullPath( 
-                    Path.Combine(_hostEnvironment.ContentRootPath, "..", "Infrastructure", "ExternalServices", "FootballData", "Files"));
+                    Path.Combine(_hostEnvironment.ContentRootPath, "..", "Infrastructure", "ExternalServices", "MatchHistory", "FootballData", "Files"));
 
                 var files = Directory.GetFiles(path);
 

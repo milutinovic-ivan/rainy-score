@@ -1,7 +1,7 @@
 ﻿using Application.Intefraces;
 using Application.Jobs;
 using Domain.Interfaces;
-using Infrastructure.ExternalServices.FootballData;
+using Infrastructure.ExternalServices.MatchHistory.FootballData;
 using Infrastructure.ExternalServices.Stadium.GooglePlaceApi;
 using Infrastructure.ExternalServices.Weather.OpenMeteo;
 using Infrastructure.ExternalServices.WeatherApi;
@@ -31,7 +31,7 @@ namespace Infrastructure
 
             services.AddScoped<IWeatherHistoryService, OpenMeteoWeatherService>();
 
-            services.AddScoped<IStadiumDataService, GooglePlaceStadiumDataService>();
+            services.AddScoped<IStadiumService, GooglePlaceStadiumDataService>();
 
             services.AddQuartz(options =>
             {

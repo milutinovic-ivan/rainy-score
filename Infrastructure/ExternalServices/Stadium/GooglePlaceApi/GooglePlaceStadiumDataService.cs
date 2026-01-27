@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace Infrastructure.ExternalServices.Stadium.GooglePlaceApi
 {
-    public class GooglePlaceStadiumDataService : IStadiumDataService
+    public class GooglePlaceStadiumDataService : IStadiumService
     {
         HttpClient _httpClient;
 
@@ -35,7 +35,7 @@ namespace Infrastructure.ExternalServices.Stadium.GooglePlaceApi
             req.Headers.Add("X-Goog-FieldMask", "places.displayName,places.location,places.types");
 
             req.Content = new StringContent(
-                System.Text.Json.JsonSerializer.Serialize(new { textQuery = $"{teamName} stadium" }),
+                JsonSerializer.Serialize(new { textQuery = $"{teamName} stadium" }),
                 Encoding.UTF8,
                 "application/json");
 

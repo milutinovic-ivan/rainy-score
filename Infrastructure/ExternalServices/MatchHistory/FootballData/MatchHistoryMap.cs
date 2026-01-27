@@ -1,7 +1,7 @@
 ﻿using CsvHelper.Configuration;
 using Application.Models;
 
-namespace Infrastructure.ExternalServices.FootballData
+namespace Infrastructure.ExternalServices.MatchHistory.FootballData
 {
     public sealed class MatchHistoryMap : ClassMap<MatchDetailsData>
     {

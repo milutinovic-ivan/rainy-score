@@ -10,17 +10,17 @@ namespace Application.Jobs
     {
         private readonly IRepository<Stadium> _stadiumRepository;
         private readonly IRepository<Team> _teamRepository;
-        private readonly IStadiumDataService _stadiumDataService;
+        private readonly IStadiumService _stadiumService;
         private readonly ILogger<StadiumImportJob> _logger;
 
         public StadiumImportJob(IRepository<Stadium> stadiumRepository,
             IRepository<Team> teamRepository,
-            IStadiumDataService stadiumDataService,
+            IStadiumService stadiumService,
             ILogger<StadiumImportJob> logger)
         {
             _stadiumRepository = stadiumRepository;
             _teamRepository = teamRepository;
-            _stadiumDataService = stadiumDataService;
+            _stadiumService = stadiumService;
             _logger = logger;
         }
 
@@ -35,7 +35,7 @@ namespace Application.Jobs
                 //just for teams without stadion initialized
                 if(team.StadiumId == null)
                 {
-                    var stadiumData = await _stadiumDataService.GetStadiumDataAsync(team.Name);
+                    var stadiumData = await _stadiumService.GetStadiumDataAsync(team.Name);
 
                     if(stadiumData != null)
                     {

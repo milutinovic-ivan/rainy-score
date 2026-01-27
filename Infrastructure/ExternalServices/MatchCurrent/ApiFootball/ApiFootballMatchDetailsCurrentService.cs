@@ -9,7 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
-namespace Infrastructure.ExternalServices.ApiFootball
+namespace Infrastructure.ExternalServices.MatchCurrent.ApiFootball
 {
     public class ApiFootballMatchDetailsCurrentService : IMatchHistoryService
     {
