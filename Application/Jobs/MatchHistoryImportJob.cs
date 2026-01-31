@@ -127,8 +127,8 @@ namespace Application.Jobs
                     HomeWinOdds = matchDetailsData.HomeWinOdds,
                     DrawWinOdds = matchDetailsData.DrawWinOdds,
                     AwayWinOdds = matchDetailsData.AwayWinOdds,
-                    GoalsOver25 = matchDetailsData.GoalsOver25,
-                    GoalsUnder25 = matchDetailsData.GoalsUnder25,
+                    GoalsOver25Odds = matchDetailsData.GoalsOver25Odds,
+                    GoalsUnder25Odds = matchDetailsData.GoalsUnder25Odds,
                     IsHistory = matchDetailsData.IsHistory
                 };
 

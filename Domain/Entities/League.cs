@@ -7,8 +7,10 @@ namespace Domain.Entities
     {
         public string Name { get; set; }
         public string ShortCode { get; set; }
+        public int? ApiFootballLeagueId { get; set; }
         public int CountryId { get; set; }
         public Country Country { get; set; } = null!;
+        public bool IsCup { get; set; }
         public ICollection<MatchDetails> MatchDetails { get; set; } = new List<MatchDetails>();
     }
 }

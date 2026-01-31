@@ -4,6 +4,7 @@ using System.Text.Json;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(ScoreDbContext))]
-    partial class ScoreDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260131092505_league_iscup_column_added")]
+    partial class league_iscup_column_added
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -403,7 +406,7 @@ namespace Infrastructure.Migrations
                     b.Property<int>("AwayTeamId")
                         .HasColumnType("integer");
 
-                    b.Property<decimal?>("AwayWinOdds")
+                    b.Property<decimal>("AwayWinOdds")
                         .HasColumnType("numeric");
 
                     b.Property<DateTime>("CreatedAt")
@@ -412,40 +415,40 @@ namespace Infrastructure.Migrations
                     b.Property<string>("DataSource")
                         .HasColumnType("text");
 
-                    b.Property<decimal?>("DrawWinOdds")
+                    b.Property<decimal>("DrawWinOdds")
                         .HasColumnType("numeric");
 
                     b.Property<int?>("FixtureId")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("FullTimeAwayGoals")
+                    b.Property<int>("FullTimeAwayGoals")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("FullTimeHomeGoals")
+                    b.Property<int>("FullTimeHomeGoals")
                         .HasColumnType("integer");
 
-                    b.Property<char?>("FullTimeWiner")
+                    b.Property<char>("FullTimeWiner")
                         .HasColumnType("character(1)");
 
-                    b.Property<decimal?>("GoalsOver25Odds")
+                    b.Property<decimal>("GoalsOver25")
                         .HasColumnType("numeric");
 
-                    b.Property<decimal?>("GoalsUnder25Odds")
+                    b.Property<decimal>("GoalsUnder25")
                         .HasColumnType("numeric");
 
-                    b.Property<int?>("HalfTimeAwayGoals")
+                    b.Property<int>("HalfTimeAwayGoals")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("HalfTimeHomeGoals")
+                    b.Property<int>("HalfTimeHomeGoals")
                         .HasColumnType("integer");
 
-                    b.Property<char?>("HalfTimeWiner")
+                    b.Property<char>("HalfTimeWiner")
                         .HasColumnType("character(1)");
 
                     b.Property<int>("HomeTeamId")
                         .HasColumnType("integer");
 
-                    b.Property<decimal?>("HomeWinOdds")
+                    b.Property<decimal>("HomeWinOdds")
                         .HasColumnType("numeric");
 
                     b.Property<bool>("IsHistory")

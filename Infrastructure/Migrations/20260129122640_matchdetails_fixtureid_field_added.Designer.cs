@@ -4,6 +4,7 @@ using System.Text.Json;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(ScoreDbContext))]
-    partial class ScoreDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260129122640_matchdetails_fixtureid_field_added")]
+    partial class matchdetails_fixtureid_field_added
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -149,9 +152,6 @@ namespace Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<bool>("IsCup")
-                        .HasColumnType("boolean");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
@@ -176,7 +176,6 @@ namespace Infrastructure.Migrations
                             ApiFootballLeagueId = 39,
                             CountryId = 1,
                             CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsCup = false,
                             Name = "Premier League",
                             ShortCode = "E0"
                         },
@@ -186,7 +185,6 @@ namespace Infrastructure.Migrations
                             ApiFootballLeagueId = 40,
                             CountryId = 1,
                             CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsCup = false,
                             Name = "Championship",
                             ShortCode = "E1"
                         },
@@ -196,7 +194,6 @@ namespace Infrastructure.Migrations
                             ApiFootballLeagueId = 41,
                             CountryId = 1,
                             CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsCup = false,
                             Name = "League One",
                             ShortCode = "E2"
                         },
@@ -206,7 +203,6 @@ namespace Infrastructure.Migrations
                             ApiFootballLeagueId = 42,
                             CountryId = 1,
                             CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsCup = false,
                             Name = "League Two",
                             ShortCode = "E3"
                         },
@@ -216,7 +212,6 @@ namespace Infrastructure.Migrations
                             ApiFootballLeagueId = 43,
                             CountryId = 1,
                             CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsCup = false,
                             Name = "National League",
                             ShortCode = "EC"
                         },
@@ -226,7 +221,6 @@ namespace Infrastructure.Migrations
                             ApiFootballLeagueId = 179,
                             CountryId = 2,
                             CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsCup = false,
                             Name = "Premiership",
                             ShortCode = "SC0"
                         },
@@ -236,7 +230,6 @@ namespace Infrastructure.Migrations
                             ApiFootballLeagueId = 180,
                             CountryId = 2,
                             CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsCup = false,
                             Name = "Championship",
                             ShortCode = "SC1"
                         },
@@ -246,7 +239,6 @@ namespace Infrastructure.Migrations
                             ApiFootballLeagueId = 183,
                             CountryId = 2,
                             CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsCup = false,
                             Name = "League One",
                             ShortCode = "SC2"
                         },
@@ -256,7 +248,6 @@ namespace Infrastructure.Migrations
                             ApiFootballLeagueId = 184,
                             CountryId = 2,
                             CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsCup = false,
                             Name = "League Two",
                             ShortCode = "SC3"
                         },
@@ -266,7 +257,6 @@ namespace Infrastructure.Migrations
                             ApiFootballLeagueId = 78,
                             CountryId = 3,
                             CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsCup = false,
                             Name = "Bundesliga",
                             ShortCode = "D1"
                         },
@@ -276,7 +266,6 @@ namespace Infrastructure.Migrations
                             ApiFootballLeagueId = 79,
                             CountryId = 3,
                             CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsCup = false,
                             Name = "2. Bundesliga",
                             ShortCode = "D2"
                         },
@@ -286,7 +275,6 @@ namespace Infrastructure.Migrations
                             ApiFootballLeagueId = 135,
                             CountryId = 4,
                             CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsCup = false,
                             Name = "Serie A",
                             ShortCode = "I1"
                         },
@@ -296,7 +284,6 @@ namespace Infrastructure.Migrations
                             ApiFootballLeagueId = 136,
                             CountryId = 4,
                             CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsCup = false,
                             Name = "Serie B",
                             ShortCode = "I2"
                         },
@@ -306,7 +293,6 @@ namespace Infrastructure.Migrations
                             ApiFootballLeagueId = 140,
                             CountryId = 5,
                             CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsCup = false,
                             Name = "La Liga",
                             ShortCode = "SP1"
                         },
@@ -316,7 +302,6 @@ namespace Infrastructure.Migrations
                             ApiFootballLeagueId = 141,
                             CountryId = 5,
                             CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsCup = false,
                             Name = "Segunda División",
                             ShortCode = "SP2"
                         },
@@ -326,7 +311,6 @@ namespace Infrastructure.Migrations
                             ApiFootballLeagueId = 61,
                             CountryId = 6,
                             CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsCup = false,
                             Name = "Ligue 1",
                             ShortCode = "F1"
                         },
@@ -336,7 +320,6 @@ namespace Infrastructure.Migrations
                             ApiFootballLeagueId = 62,
                             CountryId = 6,
                             CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsCup = false,
                             Name = "Ligue 2",
                             ShortCode = "F2"
                         },
@@ -346,7 +329,6 @@ namespace Infrastructure.Migrations
                             ApiFootballLeagueId = 88,
                             CountryId = 7,
                             CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsCup = false,
                             Name = "Eredivisie",
                             ShortCode = "N1"
                         },
@@ -356,7 +338,6 @@ namespace Infrastructure.Migrations
                             ApiFootballLeagueId = 144,
                             CountryId = 8,
                             CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsCup = false,
                             Name = "Jupiler Pro League",
                             ShortCode = "B1"
                         },
@@ -366,7 +347,6 @@ namespace Infrastructure.Migrations
                             ApiFootballLeagueId = 94,
                             CountryId = 9,
                             CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsCup = false,
                             Name = "Primeira Liga",
                             ShortCode = "P1"
                         },
@@ -376,7 +356,6 @@ namespace Infrastructure.Migrations
                             ApiFootballLeagueId = 203,
                             CountryId = 10,
                             CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsCup = false,
                             Name = "Süper Lig",
                             ShortCode = "T1"
                         },
@@ -386,7 +365,6 @@ namespace Infrastructure.Migrations
                             ApiFootballLeagueId = 197,
                             CountryId = 11,
                             CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsCup = false,
                             Name = "Super League 1",
                             ShortCode = "G1"
                         });
@@ -403,7 +381,7 @@ namespace Infrastructure.Migrations
                     b.Property<int>("AwayTeamId")
                         .HasColumnType("integer");
 
-                    b.Property<decimal?>("AwayWinOdds")
+                    b.Property<decimal>("AwayWinOdds")
                         .HasColumnType("numeric");
 
                     b.Property<DateTime>("CreatedAt")
@@ -412,40 +390,40 @@ namespace Infrastructure.Migrations
                     b.Property<string>("DataSource")
                         .HasColumnType("text");
 
-                    b.Property<decimal?>("DrawWinOdds")
+                    b.Property<decimal>("DrawWinOdds")
                         .HasColumnType("numeric");
 
                     b.Property<int?>("FixtureId")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("FullTimeAwayGoals")
+                    b.Property<int>("FullTimeAwayGoals")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("FullTimeHomeGoals")
+                    b.Property<int>("FullTimeHomeGoals")
                         .HasColumnType("integer");
 
-                    b.Property<char?>("FullTimeWiner")
+                    b.Property<char>("FullTimeWiner")
                         .HasColumnType("character(1)");
 
-                    b.Property<decimal?>("GoalsOver25Odds")
+                    b.Property<decimal>("GoalsOver25")
                         .HasColumnType("numeric");
 
-                    b.Property<decimal?>("GoalsUnder25Odds")
+                    b.Property<decimal>("GoalsUnder25")
                         .HasColumnType("numeric");
 
-                    b.Property<int?>("HalfTimeAwayGoals")
+                    b.Property<int>("HalfTimeAwayGoals")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("HalfTimeHomeGoals")
+                    b.Property<int>("HalfTimeHomeGoals")
                         .HasColumnType("integer");
 
-                    b.Property<char?>("HalfTimeWiner")
+                    b.Property<char>("HalfTimeWiner")
                         .HasColumnType("character(1)");
 
                     b.Property<int>("HomeTeamId")
                         .HasColumnType("integer");
 
-                    b.Property<decimal?>("HomeWinOdds")
+                    b.Property<decimal>("HomeWinOdds")
                         .HasColumnType("numeric");
 
                     b.Property<bool>("IsHistory")

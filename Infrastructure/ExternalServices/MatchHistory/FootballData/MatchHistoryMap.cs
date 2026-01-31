@@ -21,8 +21,8 @@ namespace Infrastructure.ExternalServices.MatchHistory.FootballData
             Map(m => m.HomeWinOdds).Name("AvgCH");
             Map(m => m.DrawWinOdds).Name("AvgCD");
             Map(m => m.AwayWinOdds).Name("AvgCA");
-            Map(m => m.GoalsOver25).Name("AvgC>2.5");
-            Map(m => m.GoalsUnder25).Name("AvgC<2.5");
+            Map(m => m.GoalsOver25Odds).Name("AvgC>2.5");
+            Map(m => m.GoalsUnder25Odds).Name("AvgC<2.5");
         }
 
         private string NormalizeTeamName(string? input)

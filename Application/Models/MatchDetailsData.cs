@@ -1,26 +1,34 @@
 ﻿using System.IO;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 
 namespace Application.Models
 {
     public class MatchDetailsData
     {
-        public string LeagueDivision { get; set; }
+        public int? LeagueId { get; set; }
+        public string? LeagueName { get; set; }
+        public string? Country { get; set; }
+        public string? LeagueDivision { get; set; }
         public DateOnly MatchDate { get; set; }
         public TimeOnly MatchTime { get; set; }
         public string HomeTeam { get; set; }
         public string AwayTeam { get; set; }
-        public int FullTimeHomeGoals { get; set; }
-        public int FullTimeAwayGoals { get; set; }
-        public char FullTimeWiner { get; set; }
-        public int HalfTimeHomeGoals { get; set; }
-        public int HalfTimeAwayGoals { get; set; }
-        public char HalfTimeWiner { get; set; }
-        public decimal HomeWinOdds { get; set; }
-        public decimal DrawWinOdds { get; set; }
-        public decimal AwayWinOdds { get; set; }
-        public decimal GoalsOver25 {get; set;}
-        public decimal GoalsUnder25 {get; set;}
+        public int? FullTimeHomeGoals { get; set; }
+        public int? FullTimeAwayGoals { get; set; }
+        public char? FullTimeWiner { get; set; }
+        public int? HalfTimeHomeGoals { get; set; }
+        public int? HalfTimeAwayGoals { get; set; }
+        public char? HalfTimeWiner { get; set; }
+        public decimal? HomeWinOdds { get; set; }
+        public decimal? DrawWinOdds { get; set; }
+        public decimal? AwayWinOdds { get; set; }
+        public decimal? GoalsOver25Odds {get; set;}
+        public decimal? GoalsUnder25Odds {get; set;}
         public bool IsHistory { get; set; }
+        public string? DataSource { get; set; }
+        public int? FixtureId { get; set; }
+        public string? Status { get; set; }
+        public JsonDocument? OriginalResponse { get; set; }
     }
 }
