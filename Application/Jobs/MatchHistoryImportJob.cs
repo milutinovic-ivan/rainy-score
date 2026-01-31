@@ -34,7 +34,7 @@ namespace Application.Jobs
 
             var stopwatch = new Stopwatch();
             stopwatch.Start();
-            
+
             //call service implementation to get list of match details
             var matchDetailsDataList = await _matchHistoryService.GetMatchDetailsHistoriesAsync();
 
@@ -74,7 +74,7 @@ namespace Application.Jobs
             }
 
             //save all at once
-            if(teamsToInsert.Count > 0)
+            if (teamsToInsert.Count > 0)
             {
                 await _teamRepository.AddRangeAsync(teamsToInsert);
                 await _teamRepository.SaveChangesAsync();
@@ -92,21 +92,31 @@ namespace Application.Jobs
 
             int matchSkipped = 0;
 
-            foreach (var matchDetailsData in matchDetailsDataList) 
+            foreach (var matchDetailsData in matchDetailsDataList)
             {
                 var league = allLeagues.Single(l => l.ShortCode == matchDetailsData.LeagueDivision);
                 var homeTeam = allTeams.Single(t => t.Name == matchDetailsData.HomeTeam);
                 var awayTeam = allTeams.Single(t => t.Name == matchDetailsData.AwayTeam);
 
-                //if MatchDetails exists, skip match
-                if(existingMatchDetails.Any(md => 
-                md.LeagueId == league.Id && 
-                md.HomeTeamId == homeTeam.Id && 
+                //match already exists in database, skip match
+                if (existingMatchDetails.Any(md =>
+                md.LeagueId == league.Id &&
+                md.HomeTeamId == homeTeam.Id &&
                 md.AwayTeamId == awayTeam.Id &&
                 md.Season == matchDetailsData.MatchDate.Year &&
                 md.MatchDate == matchDetailsData.MatchDate))
                 {
                     matchSkipped++;
+                    continue;
+                }
+
+                //match doensn't exist in database but data is not complete, no odds, skip match
+                if (matchDetailsData.HomeWinOdds == null 
+                    || matchDetailsData.DrawWinOdds == null 
+                    || matchDetailsData.AwayWinOdds == null
+                    || matchDetailsData.GoalsOver25Odds == null
+                    || matchDetailsData.GoalsUnder25Odds == null)
+                {
                     continue;
                 }
 
