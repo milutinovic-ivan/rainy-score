@@ -34,7 +34,9 @@ namespace Infrastructure
 
             services.AddScoped<IStadiumService, GooglePlaceStadiumService>();
 
+            //ApiFootball injection
             services.AddScoped<IMatchLiveService, ApiFootballMatchLiveService>();
+            services.AddScoped<ILeagueService, ApiFootballMatchLiveService>();
 
             services.AddQuartz(options =>
             {
