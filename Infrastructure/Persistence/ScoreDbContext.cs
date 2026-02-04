@@ -13,6 +13,8 @@ namespace Infrastructure.Persistence
         public DbSet<MatchDetails> MatchDetails { get; set; }
         public DbSet<WeatherCondition> WeatherConditions { get; set; }
 
+        public DbSet<LeagueExternalMap> LeagueExternalMaps { get; set; }
+
         public ScoreDbContext(DbContextOptions<ScoreDbContext> options) : base(options) { }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
