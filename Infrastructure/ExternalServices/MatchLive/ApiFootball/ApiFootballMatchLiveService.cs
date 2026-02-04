@@ -10,6 +10,8 @@ namespace Infrastructure.ExternalServices.MatchLive.ApiFootball
         const string BASE_URL = "https://v3.football.api-sports.io";
         const string API_KEY = "33ce4dc10403efcdb4b51782b8e7d73c";
 
+        const string DATA_SOURCE = "apifootball";
+
         private readonly HttpClient _httpClient;
         private readonly ILogger<ApiFootballMatchLiveService> _logger;
 
@@ -27,7 +29,7 @@ namespace Infrastructure.ExternalServices.MatchLive.ApiFootball
             return matchDetailsDataList;
         }
 
-        public async Task<LeagueData?> GetLeagueData(int leagueId)
+        public async Task<LeagueData?> GetLeagueDataAsync(int leagueId)
         {
             var jsonString = await GetLeagueJsonAsync(leagueId);
             var leagueData = ParseLeague(jsonString);
@@ -79,6 +81,8 @@ namespace Infrastructure.ExternalServices.MatchLive.ApiFootball
             {
                 var matchDetails = new MatchDetailsData();
 
+                matchDetails.DataSource = DATA_SOURCE;
+
                 //fixture
                 var dateStr = item.GetProperty("fixture").GetProperty("date").GetString();
                 var timeStr = item.GetProperty("fixture").GetProperty("timestamp").GetInt64();
@@ -95,15 +99,15 @@ namespace Infrastructure.ExternalServices.MatchLive.ApiFootball
                 //league
                 var leagueEl = item.GetProperty("league");
 
-                matchDetails.LeagueId = leagueEl.GetProperty("id").GetInt32();
-                matchDetails.LeagueName = leagueEl.GetProperty("name").GetString();
-                matchDetails.Country = leagueEl.GetProperty("country").GetString();
+                matchDetails.ExternalLeagueId = leagueEl.GetProperty("id").GetInt32();
+                matchDetails.LeagueName = leagueEl.GetProperty("name").GetString()?.Trim();
+                matchDetails.Country = leagueEl.GetProperty("country").GetString()?.Trim();
 
                 //teams
                 var teamsEl = item.GetProperty("teams");
 
-                matchDetails.HomeTeam = teamsEl.GetProperty("home").GetProperty("name").GetString() ?? string.Empty;
-                matchDetails.AwayTeam = teamsEl.GetProperty("away").GetProperty("name").GetString() ?? string.Empty;
+                matchDetails.HomeTeam = teamsEl.GetProperty("home").GetProperty("name").GetString()?.Trim() ?? string.Empty;
+                matchDetails.AwayTeam = teamsEl.GetProperty("away").GetProperty("name").GetString()?.Trim() ?? string.Empty;
 
                 //score
                 if(matchDetails.Status == "FT")
@@ -117,14 +121,23 @@ namespace Infrastructure.ExternalServices.MatchLive.ApiFootball
 
                     var halfTimeEl = item.GetProperty("score").GetProperty("halftime");
 
-                    matchDetails.HalfTimeHomeGoals = halfTimeEl.GetProperty("home").GetInt32();
-                    matchDetails.HalfTimeAwayGoals = halfTimeEl.GetProperty("away").GetInt32();
-                    matchDetails.HalfTimeWiner = matchDetails.HalfTimeHomeGoals > matchDetails.HalfTimeAwayGoals ? 'H' 
-                        : matchDetails.HalfTimeAwayGoals > matchDetails.HalfTimeHomeGoals ? 'A' : 'D';
+                    matchDetails.HalfTimeHomeGoals = halfTimeEl.GetProperty("home").ValueKind == JsonValueKind.Number
+                        ? halfTimeEl.GetProperty("home").GetInt32() : null;
+                    matchDetails.HalfTimeAwayGoals = halfTimeEl.GetProperty("away").ValueKind == JsonValueKind.Number
+                        ? halfTimeEl.GetProperty("away").GetInt32() : null;
+
+                    if(matchDetails.HalfTimeHomeGoals.HasValue && matchDetails.HalfTimeAwayGoals.HasValue)
+                    {
+                        matchDetails.HalfTimeWiner = matchDetails.HalfTimeHomeGoals > matchDetails.HalfTimeAwayGoals ? 'H'
+                            : matchDetails.HalfTimeAwayGoals > matchDetails.HalfTimeHomeGoals ? 'A' : 'D';
+                    }
+                    else
+                    {
+                        matchDetails.HalfTimeWiner = null;
+                    }
                 }
 
                 matchDetails.IsHistory = false;
-                matchDetails.DataSource = "ApiFootball";
 
                 result.Add(matchDetails);
             }

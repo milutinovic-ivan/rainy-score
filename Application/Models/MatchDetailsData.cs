@@ -6,14 +6,17 @@ namespace Application.Models
 {
     public class MatchDetailsData
     {
-        public int? LeagueId { get; set; }
+        public string? DataSource { get; set; }
+        public int? ExternalLeagueId { get; set; }
+        public bool? IsCup { get; set; }
+        public int? FixtureId { get; set; }
         public string? LeagueName { get; set; }
         public string? Country { get; set; }
         public string? LeagueDivision { get; set; }
         public DateOnly MatchDate { get; set; }
         public TimeOnly MatchTime { get; set; }
-        public string HomeTeam { get; set; }
-        public string AwayTeam { get; set; }
+        public string HomeTeam { get; set; } = null!;
+        public string AwayTeam { get; set; } = null!;
         public int? FullTimeHomeGoals { get; set; }
         public int? FullTimeAwayGoals { get; set; }
         public char? FullTimeWiner { get; set; }
@@ -26,8 +29,6 @@ namespace Application.Models
         public decimal? GoalsOver25Odds {get; set;}
         public decimal? GoalsUnder25Odds {get; set;}
         public bool IsHistory { get; set; }
-        public string? DataSource { get; set; }
-        public int? FixtureId { get; set; }
         public string? Status { get; set; }
         public JsonDocument? OriginalResponse { get; set; }
     }

@@ -1,11 +1,10 @@
 ﻿using Application.Intefraces;
+using Application.Models;
 using Domain.Entities;
 using Domain.Interfaces;
 using Microsoft.Extensions.Logging;
 using Quartz;
 using System.Diagnostics;
-using System.IO;
-using System.Net.Http.Headers;
 
 namespace Application.Jobs
 {
@@ -13,20 +12,26 @@ namespace Application.Jobs
     {
         private readonly IMatchLiveService _matchLiveService;
         private readonly ILogger<MatchLiveImportJob> _logger;
+        private readonly IRepository<Country> _countryRepository;
         private readonly IRepository<League> _leagueRepository;
         private readonly IRepository<Team> _teamRepository;
         private readonly IRepository<MatchDetails> _matchDetailsRepository;
+        private readonly IRepository<LeagueExternalMap> _leagueExternalMapRepository;
 
         public MatchLiveImportJob(IMatchLiveService matchLiveService, ILogger<MatchLiveImportJob> logger,
+           IRepository<Country> countryRepository,
            IRepository<League> leagueRepository,
            IRepository<Team> teamRepository,
-           IRepository<MatchDetails> matchDetailsRepository)
+           IRepository<MatchDetails> matchDetailsRepository,
+           IRepository<LeagueExternalMap> leagueExternalMapRepository)
         {
             _matchLiveService = matchLiveService;
             _logger = logger;
+            _countryRepository = countryRepository;
             _leagueRepository = leagueRepository;
             _teamRepository = teamRepository;
             _matchDetailsRepository = matchDetailsRepository;
+            _leagueExternalMapRepository = leagueExternalMapRepository;
         }
 
         public async Task Execute(IJobExecutionContext context)
@@ -42,82 +47,171 @@ namespace Application.Jobs
 
             //call service implementation to get list of match details
             var matchDetailsDataList = await _matchLiveService.GetMatchDetailsListAsync(runDate);
+            
+            //get all existing data from db
+            var allTeams = await _teamRepository.GetAllAsync();
+            var allContries = await _countryRepository.GetAllAsync();
+            var allleagueExternalMaps = await _leagueExternalMapRepository.GetAllAsync();
+            var RunDateMatchDetailsList = await _matchDetailsRepository.GetAllAsync(md => md.Where(m => m.MatchDate == runDate));
 
-            //insert Teams
-            var existingTeams = await _teamRepository.GetAllAsync();
-            var teamsToInsert = new List<Team>();
+            //put results in dicts to not query db every time
+            var teamsCache = allTeams.ToDictionary(t => t.Name.Trim(), t => t, StringComparer.OrdinalIgnoreCase);
+            var countryCache = allContries.ToDictionary(c => c.Name.Trim(), c => c, StringComparer.OrdinalIgnoreCase);
+            var leagueExternalMapCache = allleagueExternalMaps.ToDictionary(l => (l.DataSource, l.ExternalLeagueId), l => l);
+
+            var matchDetailsToInsert = new List<MatchDetails>();
+            int updatedMatches = 0;
+            int insertedMatches = 0;
 
             foreach (var matchDetailsData in matchDetailsDataList)
             {
-                //add home team just if already not exists
-                var teamExists = existingTeams.Any(t => t.Name == matchDetailsData.HomeTeam);
-
-                if (!teamExists)
+                //match is skipped if there is no league data or competition is cup
+                if (matchDetailsData.DataSource is null || matchDetailsData.ExternalLeagueId is null)
                 {
-                    var team = new Team
+                    _logger.LogWarning($"Match skipped... No DataSource or ExternalLeagueId, DataSource: {matchDetailsData.DataSource} ; " +
+                        $"ExternalLeagueId: {matchDetailsData.ExternalLeagueId}");
+                    continue;
+                }
+
+                //if service is implemented get league data from implementation
+                LeagueData? leagueData = null;
+                if (_matchLiveService is ILeagueService leagueService)
+                {
+                    leagueData = await leagueService.GetLeagueDataAsync(matchDetailsData.ExternalLeagueId.Value);
+
+                    if (leagueData is null)
+                    {
+                        _logger.LogWarning($"Match skipped... LeagueService returned null");
+                        continue;
+                    }
+
+                    if(leagueData.IsCup)
+                    {
+                        _logger.LogInformation($"Match skipped... it is cup not league");
+                        continue;
+                    }
+                }
+                else
+                {
+                    bool isCup = matchDetailsData.IsCup ?? false;
+                    if(isCup)
+                    {
+                        _logger.LogInformation($"Match skipped... it is cup not league");
+                        continue;
+                    }
+                }
+
+                //add home team just if already not exists
+                if (!teamsCache.TryGetValue(matchDetailsData.HomeTeam, out var homeTeam))
+                {
+                    homeTeam = new Team
                     {
                         Name = matchDetailsData.HomeTeam,
                         StadiumId = null
                     };
 
-                    teamsToInsert.Add(team);
+                    await _teamRepository.AddAsync(homeTeam);
+                    await _teamRepository.SaveChangesAsync();
+
+                    //add new item in dict
+                    teamsCache.Add(homeTeam.Name, homeTeam);
+
+                    _logger.LogInformation($"Team added... Name: {homeTeam.Name}");
                 }
 
                 //add away team just if already not exists
-                teamExists = existingTeams.Any(t => t.Name == matchDetailsData.AwayTeam);
-
-                if (!teamExists)
+                if (!teamsCache.TryGetValue(matchDetailsData.AwayTeam, out var awayTeam))
                 {
-                    var team = new Team
+                    awayTeam = new Team
                     {
                         Name = matchDetailsData.AwayTeam,
                         StadiumId = null
                     };
 
-                    teamsToInsert.Add(team);
+                    await _teamRepository.AddAsync(awayTeam);
+                    await _teamRepository.SaveChangesAsync();
+
+                    //add new item in dict
+                    teamsCache.Add(awayTeam.Name, awayTeam);
+
+                    _logger.LogInformation($"Team added... Name: {awayTeam.Name}");
                 }
-            }
 
-            //save all at once
-            if(teamsToInsert.Count > 0)
-            {
-                await _teamRepository.AddRangeAsync(teamsToInsert);
-                await _teamRepository.SaveChangesAsync();
-            }
+                //countries
+                var normalizedCountryName = string.IsNullOrWhiteSpace(matchDetailsData.Country)
+                    ? "Unknown"
+                    : matchDetailsData.Country.Trim();
 
-            _logger.LogInformation($"Teams inserted count: {teamsToInsert.Count}");
+                if (!countryCache.TryGetValue(normalizedCountryName, out var country))
+                {
+                    country = new Country
+                    {
+                        Name = normalizedCountryName
+                    };
+
+                    await _countryRepository.AddAsync(country);
+                    await _countryRepository.SaveChangesAsync();
+
+                    countryCache.Add(normalizedCountryName, country);
+
+                    _logger.LogInformation($"Country added... Name: {country.Name}");
+                }
 
 
-            //insert MatchDetails
-            var existingMatchDetailsList = await _matchDetailsRepository.GetAllAsync(md => md.Where(m => m.MatchDate == runDate));
-            var allLeagues = await _leagueRepository.GetAllAsync();
-            var allTeams = await _teamRepository.GetAllAsync();
+                //leagues
+                var leagueExternalMapKey = (matchDetailsData.DataSource, matchDetailsData.ExternalLeagueId.Value);
 
-            var matchDetailsToInsert = new List<MatchDetails>();
+                if (!leagueExternalMapCache.TryGetValue(leagueExternalMapKey, out var map))
+                {
+                    //insert new League
+                    var league = new League();
 
-            foreach (var matchDetailsData in matchDetailsDataList) 
-            {
-                var league = allLeagues.Single(l => l.ShortCode == matchDetailsData.LeagueDivision);
-                var homeTeam = allTeams.Single(t => t.Name == matchDetailsData.HomeTeam);
-                var awayTeam = allTeams.Single(t => t.Name == matchDetailsData.AwayTeam);
+                    //if service is implemented get league data from implementation
+                    if(_matchLiveService is ILeagueService)
+                    {
+                        league.Name = leagueData!.Name;
+                        league.CountryId = country.Id;
+                        league.IsCup = leagueData.IsCup;
+                    }
+                    else
+                    {
+                        league.Name = matchDetailsData.LeagueName!;
+                        league.CountryId = country.Id;
+                        league.IsCup = matchDetailsData.IsCup ?? false;
+                    }
 
-                //TODO
-                // 2. if league doesn't exists, get league from ILeagueService interface and insert into database
-                // 3. also check if country exists and insert Country first if not
-                // 4. just if league is not IsCup then continue with match insert
-                // 5. add other fields in MatchDetailData like Status, OriginalReponse... 
-                // 6. create new service method and return odds for single match, insert or update odds also
-                // 7. take care when returning odds to not break 1 minute limit, and maybe day limit also
+                    await _leagueRepository.AddAsync(league);
+                    await _leagueRepository.SaveChangesAsync();
 
-                var existingMatch = existingMatchDetailsList.SingleOrDefault(md =>
-                    md.LeagueId == league.Id &&
+                    _logger.LogInformation($"League added... Name: {league.Name}");
+
+                    //insert new LeagueExternalMap
+                    map = new LeagueExternalMap
+                    {
+                        LeagueId = league.Id,
+                        DataSource = matchDetailsData.DataSource,
+                        ExternalLeagueId = matchDetailsData.ExternalLeagueId.Value
+                    };
+
+                    await _leagueExternalMapRepository.AddAsync(map);
+                    await _leagueExternalMapRepository.SaveChangesAsync();
+
+                    //add new LeagueExternalMap in cache dict
+                    leagueExternalMapCache.Add(leagueExternalMapKey, map);
+                }
+
+                var leagueId = map.LeagueId;
+
+                //MatchDetails
+                var existingMatch = RunDateMatchDetailsList.SingleOrDefault(md =>
+                    md.LeagueId == leagueId &&
                     md.HomeTeamId == homeTeam.Id &&
                     md.AwayTeamId == awayTeam.Id &&
                     md.Season == matchDetailsData.MatchDate.Year &&
                     md.MatchDate == matchDetailsData.MatchDate);
 
-                //if match exists update, if not insert new
-                if(existingMatch != null)
+                // update or insert new MatchDetails
+                if (existingMatch != null)
                 {
                     existingMatch.FullTimeHomeGoals = matchDetailsData.FullTimeHomeGoals;
                     existingMatch.FullTimeAwayGoals = matchDetailsData.FullTimeAwayGoals;
@@ -125,18 +219,14 @@ namespace Application.Jobs
                     existingMatch.HalfTimeHomeGoals = matchDetailsData.HalfTimeHomeGoals;
                     existingMatch.HalfTimeAwayGoals = matchDetailsData.HalfTimeAwayGoals;
                     existingMatch.HalfTimeWiner = matchDetailsData.HalfTimeWiner;
-                    existingMatch.HomeWinOdds = matchDetailsData.HomeWinOdds;
-                    existingMatch.DrawWinOdds = matchDetailsData.DrawWinOdds;
-                    existingMatch.AwayWinOdds = matchDetailsData.AwayWinOdds;
-                    existingMatch.GoalsOver25Odds = matchDetailsData.GoalsOver25Odds;
-                    existingMatch.GoalsUnder25Odds = matchDetailsData.GoalsUnder25Odds;
-                    existingMatch.IsHistory = matchDetailsData.IsHistory;
+
+                    updatedMatches++;
                 }
                 else
                 {
                     var matchDetails = new MatchDetails
                     {
-                        LeagueId = league.Id,
+                        LeagueId = leagueId,
                         Season = matchDetailsData.MatchDate.Year,
                         MatchDate = matchDetailsData.MatchDate,
                         MatchTime = matchDetailsData.MatchTime,
@@ -153,10 +243,15 @@ namespace Application.Jobs
                         AwayWinOdds = matchDetailsData.AwayWinOdds,
                         GoalsOver25Odds = matchDetailsData.GoalsOver25Odds,
                         GoalsUnder25Odds = matchDetailsData.GoalsUnder25Odds,
-                        IsHistory = matchDetailsData.IsHistory
+                        IsHistory = matchDetailsData.IsHistory,
+                        DataSource = matchDetailsData.DataSource,
+                        FixtureId = matchDetailsData.FixtureId,
+                        Status = matchDetailsData.Status
                     };
 
                     matchDetailsToInsert.Add(matchDetails);
+
+                    insertedMatches++;
                 }
             }
 
@@ -169,7 +264,7 @@ namespace Application.Jobs
             //call save changes anyway
             await _matchDetailsRepository.SaveChangesAsync();
 
-            _logger.LogInformation($"Match details inserted count: {matchDetailsToInsert.Count}");
+            _logger.LogInformation($"Match details: updated count: {updatedMatches}, inserted count: {insertedMatches}");
 
             stopwatch.Stop();
             TimeSpan elapsed = stopwatch.Elapsed;

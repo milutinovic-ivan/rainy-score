@@ -4,6 +4,6 @@ namespace Application.Intefraces
 {
     public interface ILeagueService
     {
-        Task<LeagueData?> GetLeagueData(int leagueId);
+        Task<LeagueData?> GetLeagueDataAsync(int leagueId);
     }
 }
