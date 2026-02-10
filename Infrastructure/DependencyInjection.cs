@@ -26,6 +26,8 @@ namespace Infrastructure
 
             services.AddScoped(typeof(IRepository<>), typeof(ScoreRepository<>));
 
+            services.AddScoped<IUnitOfWork, EfUnitOfWork>();
+
             services.AddScoped<IWeatherService, WeatherApiWeatherService>();
 
             services.AddScoped<IMatchHistoryService, FootballDataMatchHistoryService>();

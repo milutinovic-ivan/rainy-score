@@ -114,10 +114,20 @@ namespace Infrastructure.ExternalServices.MatchLive.ApiFootball
                 {
                     var fullTimeEl = item.GetProperty("score").GetProperty("fulltime");
 
-                    matchDetails.FullTimeHomeGoals = fullTimeEl.GetProperty("home").GetInt32();
-                    matchDetails.FullTimeAwayGoals = fullTimeEl.GetProperty("away").GetInt32();
-                    matchDetails.FullTimeWiner = matchDetails.FullTimeHomeGoals > matchDetails.FullTimeAwayGoals ? 'H' 
-                        : matchDetails.FullTimeAwayGoals > matchDetails.FullTimeHomeGoals ? 'A' : 'D';
+                    matchDetails.FullTimeHomeGoals = fullTimeEl.GetProperty("home").ValueKind == JsonValueKind.Number
+                        ? fullTimeEl.GetProperty("home").GetInt32() : null;
+                    matchDetails.FullTimeAwayGoals = fullTimeEl.GetProperty("away").ValueKind == JsonValueKind.Number
+                        ? fullTimeEl.GetProperty("away").GetInt32() : null;
+
+                    if(matchDetails.FullTimeHomeGoals.HasValue && matchDetails.FullTimeAwayGoals.HasValue)
+                    {
+                        matchDetails.FullTimeWiner = matchDetails.FullTimeHomeGoals > matchDetails.FullTimeAwayGoals ? 'H'
+                            : matchDetails.FullTimeAwayGoals > matchDetails.FullTimeHomeGoals ? 'A' : 'D';
+                    }
+                    else
+                    {
+                        matchDetails.FullTimeWiner = null;
+                    }
 
                     var halfTimeEl = item.GetProperty("score").GetProperty("halftime");
 
@@ -185,10 +195,19 @@ namespace Infrastructure.ExternalServices.MatchLive.ApiFootball
 
             var leagueData = new LeagueData();
 
-            leagueData.Id = responseEl.GetProperty("league").GetProperty("id").GetInt32();
-            leagueData.Name = responseEl.GetProperty("league").GetProperty("name").GetString();
-            leagueData.Country = responseEl.GetProperty("country").GetProperty("name").GetString();
-            leagueData.IsCup = responseEl.GetProperty("league").GetProperty("type").GetString() != "League";
+            try
+            {
+                leagueData.Id = responseEl[0].GetProperty("league").GetProperty("id").GetInt32();
+                leagueData.Name = responseEl[0].GetProperty("league").GetProperty("name").GetString();
+                leagueData.Country = responseEl[0].GetProperty("country").GetProperty("name").GetString();
+                leagueData.IsCup = responseEl[0].GetProperty("league").GetProperty("type").GetString() != "League";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error parsing league data. Json: {Json}", jsonString);
+                return null;
+            }
+
 
             return leagueData;
         }

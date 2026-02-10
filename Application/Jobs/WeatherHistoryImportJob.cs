@@ -22,14 +22,17 @@ namespace Application.Jobs
         private readonly ILogger<WeatherHistoryImportJob> _logger;
         private readonly IRepository<MatchDetails> _matchDetailsRepository;
         private readonly IWeatherHistoryService _weatherHistoryService;
+        private readonly IUnitOfWork _unitOfWork;
 
         public WeatherHistoryImportJob(ILogger<WeatherHistoryImportJob> logger, 
             IRepository<MatchDetails> matchDetailsRepository,
-            IWeatherHistoryService weatherHistoryService)
+            IWeatherHistoryService weatherHistoryService,
+            IUnitOfWork unitOfWork)
         {
             _logger = logger;
             _matchDetailsRepository = matchDetailsRepository;
             _weatherHistoryService = weatherHistoryService;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task Execute(IJobExecutionContext context)
@@ -103,7 +106,7 @@ namespace Application.Jobs
             }
 
             // save all at once
-            await _matchDetailsRepository.SaveChangesAsync();
+            await _unitOfWork.SaveChangesAsync();
 
             _logger.LogInformation($"Job finished... Match Processed Count: {matchProcessedCount}, Service Request Count: {serviceRequestCount}");
         }

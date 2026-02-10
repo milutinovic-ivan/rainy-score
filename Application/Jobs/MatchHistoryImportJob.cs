@@ -15,17 +15,20 @@ namespace Application.Jobs
         private readonly IRepository<League> _leagueRepository;
         private readonly IRepository<Team> _teamRepository;
         private readonly IRepository<MatchDetails> _matchDetailsRepository;
+        private readonly IUnitOfWork _unitOfWork;
 
         public MatchHistoryImportJob(IMatchHistoryService matchHistoryService, ILogger<MatchHistoryImportJob> logger,
            IRepository<League> leagueRepository,
            IRepository<Team> teamRepository,
-           IRepository<MatchDetails> matchDetailsRepository)
+           IRepository<MatchDetails> matchDetailsRepository,
+           IUnitOfWork unitOfWork)
         {
             _matchHistoryService = matchHistoryService;
             _logger = logger;
             _leagueRepository = leagueRepository;
             _teamRepository = teamRepository;
             _matchDetailsRepository = matchDetailsRepository;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task Execute(IJobExecutionContext context)
@@ -77,7 +80,7 @@ namespace Application.Jobs
             if (teamsToInsert.Count > 0)
             {
                 await _teamRepository.AddRangeAsync(teamsToInsert);
-                await _teamRepository.SaveChangesAsync();
+                await _unitOfWork.SaveChangesAsync();
             }
 
             _logger.LogInformation($"Teams inserted count: {teamsToInsert.Count}");
@@ -149,7 +152,7 @@ namespace Application.Jobs
             if(matchDetailsToInsert.Count > 0)
             {
                 await _matchDetailsRepository.AddRangeAsync(matchDetailsToInsert);
-                await _matchDetailsRepository.SaveChangesAsync();
+                await _unitOfWork.SaveChangesAsync();
             }
 
             _logger.LogInformation($"Match details inserted count: {matchDetailsToInsert.Count}, skipped: {matchSkipped}");

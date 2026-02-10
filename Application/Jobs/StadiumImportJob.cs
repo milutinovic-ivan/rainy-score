@@ -12,16 +12,19 @@ namespace Application.Jobs
         private readonly IRepository<Team> _teamRepository;
         private readonly IStadiumService _stadiumService;
         private readonly ILogger<StadiumImportJob> _logger;
+        private readonly IUnitOfWork _unitOfWork;
 
         public StadiumImportJob(IRepository<Stadium> stadiumRepository,
             IRepository<Team> teamRepository,
             IStadiumService stadiumService,
-            ILogger<StadiumImportJob> logger)
+            ILogger<StadiumImportJob> logger,
+            IUnitOfWork unitOfWork)
         {
             _stadiumRepository = stadiumRepository;
             _teamRepository = teamRepository;
             _stadiumService = stadiumService;
             _logger = logger;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task Execute(IJobExecutionContext context)
@@ -65,8 +68,7 @@ namespace Application.Jobs
                 }
             }
 
-            await _teamRepository.SaveChangesAsync();
-            await _stadiumRepository.SaveChangesAsync();
+            await _unitOfWork.SaveChangesAsync();
 
             _logger.LogInformation("Job finished..");
         }

@@ -74,10 +74,5 @@ namespace Infrastructure.Repositories
         {
             await _context.Set<T>().ExecuteDeleteAsync();
         }
-
-        public async Task SaveChangesAsync()
-        {
-            await _context.SaveChangesAsync();
-        }
     }
 }
