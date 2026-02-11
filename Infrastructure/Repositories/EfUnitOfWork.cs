@@ -16,6 +16,11 @@ namespace Infrastructure.Repositories
 
         public async Task BeginTransactionAsync(CancellationToken ct = default)
         {
+            if (_tx != null)
+            {
+                throw new InvalidOperationException("Transaction already started.");
+            }
+
             _tx = await _context.Database.BeginTransactionAsync(ct);
         }
 

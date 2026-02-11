@@ -1,7 +1,10 @@
 ﻿using Application.Intefraces;
 using Application.Models;
 using Microsoft.Extensions.Logging;
+using System.Reflection;
 using System.Text.Json;
+using System.Text.RegularExpressions;
+using System.Xml.Linq;
 
 namespace Infrastructure.ExternalServices.MatchLive.ApiFootball
 {
@@ -11,6 +14,7 @@ namespace Infrastructure.ExternalServices.MatchLive.ApiFootball
         const string API_KEY = "33ce4dc10403efcdb4b51782b8e7d73c";
 
         const string DATA_SOURCE = "apifootball";
+        const string PIMARY_BOOKMAKER = "Bet365";
 
         private readonly HttpClient _httpClient;
         private readonly ILogger<ApiFootballMatchLiveService> _logger;
@@ -27,6 +31,14 @@ namespace Infrastructure.ExternalServices.MatchLive.ApiFootball
             var matchDetailsDataList = ParseFixtures(jsonString);
 
             return matchDetailsDataList;
+        }
+
+        public async Task<MatchDetailsData?> GetMatchOddsAsync(int fixtureId)
+        {
+            var jsonString = await GetOddsJsonAsync(fixtureId);
+            var matchDetailsData = ParseOdds(jsonString);
+
+            return matchDetailsData;
         }
 
         public async Task<LeagueData?> GetLeagueDataAsync(int leagueId)
@@ -153,6 +165,134 @@ namespace Infrastructure.ExternalServices.MatchLive.ApiFootball
             }
 
             return result;
+        }
+
+        private async Task<string?> GetOddsJsonAsync(int fixtureId)
+        {
+            var url = $"{BASE_URL}/odds?fixture={fixtureId}";
+
+            using var request = new HttpRequestMessage(HttpMethod.Get, url);
+            request.Headers.Add("x-apisports-key", API_KEY);
+
+            var response = await _httpClient.SendAsync(request);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                _logger.LogError(
+                    "API-Football error. Url: {Url}, Status: {Status}, Body: {Body}",
+                    url, response.StatusCode, error);
+
+                return null;
+            }
+
+            var jsonString = await response.Content.ReadAsStringAsync();
+            return jsonString;
+        }
+
+        private MatchDetailsData? ParseOdds(string? jsonString)
+        {
+            var matchDetails = new MatchDetailsData();
+
+            if (string.IsNullOrWhiteSpace(jsonString))
+            {
+                return null;
+            }
+
+            using var rootDoc = JsonDocument.Parse(jsonString);
+
+            if (!rootDoc.RootElement.TryGetProperty("response", out var responseEl) 
+                ||responseEl.ValueKind != JsonValueKind.Array 
+                || responseEl.GetArrayLength() == 0)
+            {
+                return null;
+            }
+
+            var item = responseEl[0];
+
+            // FixtureId
+            matchDetails.FixtureId = item.GetProperty("fixture").GetProperty("id").GetInt32();
+
+            if (!item.TryGetProperty("bookmakers", out var bookmakersEl) ||
+                bookmakersEl.ValueKind != JsonValueKind.Array ||
+                bookmakersEl.GetArrayLength() == 0)
+            {
+                return null;
+            }
+
+            // pick PIMARY_BOOKMAKER if exists, else first
+            JsonElement chosenBookmaker = bookmakersEl[0];
+
+            foreach (var bm in bookmakersEl.EnumerateArray())
+            {
+                var name = bm.GetProperty("name").GetString();
+                if (string.Equals(name, PIMARY_BOOKMAKER, StringComparison.OrdinalIgnoreCase))
+                {
+                    chosenBookmaker = bm;
+                    break;
+                }
+            }
+
+            matchDetails.BookmakerId = chosenBookmaker.GetProperty("id").GetInt32();
+            matchDetails.BookmakerName = chosenBookmaker.GetProperty("name").GetString();
+            matchDetails.OriginalResponseOdds = JsonDocument.Parse(chosenBookmaker.GetRawText());
+
+            if (!chosenBookmaker.TryGetProperty("bets", out var betsEl) ||
+                betsEl.ValueKind != JsonValueKind.Array)
+            {
+                return null;
+            }
+
+            foreach (var bet in betsEl.EnumerateArray())
+            {
+                var betName = bet.GetProperty("name").GetString();
+
+                if (!bet.TryGetProperty("values", out var valuesEl) || valuesEl.ValueKind != JsonValueKind.Array)
+                {
+                    continue;
+                }
+
+                // Match Winner
+                if (betName == "Match Winner")
+                {
+                    foreach (var v in valuesEl.EnumerateArray())
+                    {
+                        var label = v.GetProperty("value").GetString();
+                        var oddStr = v.GetProperty("odd").GetString();
+
+                        if (!decimal.TryParse(oddStr, System.Globalization.NumberStyles.Any,
+                            System.Globalization.CultureInfo.InvariantCulture, out var odd))
+                        {
+                            continue;
+                        }
+
+                        if (label == "Home") matchDetails.HomeWinOdds = odd;
+                        else if (label == "Draw") matchDetails.DrawWinOdds = odd;
+                        else if (label == "Away") matchDetails.AwayWinOdds = odd;
+                    }
+                }
+
+                // Goals Over/Under
+                if (betName == "Goals Over/Under")
+                {
+                    foreach (var v in valuesEl.EnumerateArray())
+                    {
+                        var label = v.GetProperty("value").GetString();
+                        var oddStr = v.GetProperty("odd").GetString();
+
+                        if (!decimal.TryParse(oddStr, System.Globalization.NumberStyles.Any,
+                            System.Globalization.CultureInfo.InvariantCulture, out var odd))
+                        {
+                            continue;
+                        }
+
+                        if (label == "Over 2.5") matchDetails.GoalsOver25Odds = odd;
+                        else if (label == "Under 2.5") matchDetails.GoalsUnder25Odds = odd;
+                    }
+                }
+            }
+
+            return matchDetails;
         }
 
         private async Task<string?> GetLeagueJsonAsync(int leagueId)

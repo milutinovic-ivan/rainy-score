@@ -30,6 +30,8 @@ namespace Application.Models
         public decimal? GoalsUnder25Odds {get; set;}
         public bool IsHistory { get; set; }
         public string? Status { get; set; }
-        public JsonDocument? OriginalResponse { get; set; }
+        public int? BookmakerId { get; set; }
+        public string? BookmakerName { get; set; }
+        public JsonDocument? OriginalResponseOdds { get; set; }
     }
 }

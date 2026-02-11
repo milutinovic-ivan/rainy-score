@@ -27,6 +27,8 @@ namespace Infrastructure.Persistence
             modelBuilder.Entity<LeagueExternalMap>().HasIndex(l => new { l.ExternalLeagueId, l.DataSource }).IsUnique();
             modelBuilder.Entity<LeagueExternalMap>().HasIndex(l => new { l.LeagueId, l.DataSource }).IsUnique();
 
+            modelBuilder.Entity<MatchDetails>().HasIndex(md => new { md.DataSource, md.FixtureId }).IsUnique();
+
             //to confirm 1 to 1 relationship in database
             modelBuilder.Entity<WeatherCondition>().HasIndex(w => w.MatchDetailsId).IsUnique();
 

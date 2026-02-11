@@ -45,12 +45,14 @@ namespace Infrastructure
                 var stadiumImportJobKey = new JobKey("StadiumImportJob");
                 var weatherHistoryImportJobKey = new JobKey("WeatherHistoryImportJob");
                 var matchLiveImportJobKey = new JobKey("MatchLiveImportJob");
+                var matchOddsImportJobKey = new JobKey("MatchOddsImportJob");
 
                 //StoreDurably if I want just to run job from api endpoint without scheduler
                 options.AddJob<MatchHistoryImportJob>(matchHistoryImportJobKey, j => j.StoreDurably());
                 options.AddJob<StadiumImportJob>(stadiumImportJobKey, j => j.StoreDurably());
                 options.AddJob<WeatherHistoryImportJob>(weatherHistoryImportJobKey, j => j.StoreDurably());
                 options.AddJob<MatchLiveImportJob>(matchLiveImportJobKey, j => j.StoreDurably());
+                options.AddJob<MatchOddsImportJob>(matchOddsImportJobKey, j => j.StoreDurably());
             });
 
             services.AddQuartzHostedService(opt => opt.WaitForJobsToComplete = true);

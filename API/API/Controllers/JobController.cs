@@ -97,5 +97,25 @@ namespace API.Controllers
 
             return Ok("Job triggered successfully.");
         }
+
+        [HttpPost("run-match-odds-import")]
+        public async Task<IActionResult> RunMatchOddsImportJob()
+        {
+            var scheduler = await _schedulerFactory.GetScheduler();
+
+            var jobKey = new JobKey("MatchOddsImportJob");
+
+            if (!await scheduler.CheckExists(jobKey))
+            {
+                return NotFound("Job not registered in scheduler.");
+            }
+
+            _logger.LogInformation("Manually triggering job at {Time}", DateTime.Now);
+
+            //only queue job for execution, not wait untill job finish
+            await scheduler.TriggerJob(jobKey);
+
+            return Ok("Job triggered successfully.");
+        }
     }
 }

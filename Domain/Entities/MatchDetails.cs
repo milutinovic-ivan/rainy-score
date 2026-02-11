@@ -37,6 +37,8 @@ namespace Domain.Entities
         public string? DataSource { get; set; }
         public int? FixtureId { get; set; }
         public string? Status { get; set; }
-        public JsonDocument? OriginalResponse { get; set; }
+        public int? BookmakerId { get; set; }
+        public string? BookmakerName { get; set; }
+        public JsonDocument? OriginalResponseOdds { get; set; }
     }
 }

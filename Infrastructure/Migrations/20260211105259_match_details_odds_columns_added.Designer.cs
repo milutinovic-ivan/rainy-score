@@ -4,6 +4,7 @@ using System.Text.Json;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(ScoreDbContext))]
-    partial class ScoreDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260211105259_match_details_odds_columns_added")]
+    partial class match_details_odds_columns_added
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -662,9 +665,6 @@ namespace Infrastructure.Migrations
                     b.HasIndex("HomeTeamId");
 
                     b.HasIndex("LeagueId");
-
-                    b.HasIndex("DataSource", "FixtureId")
-                        .IsUnique();
 
                     b.ToTable("MatchDetails");
                 });
