@@ -1,29 +1,20 @@
 ﻿using Application.Intefraces;
 using Application.Models;
-using Domain.Entities;
-using Infrastructure.ExternalServices.WeatherApi;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Reflection.Metadata;
-using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 
-namespace Infrastructure.ExternalServices.Weather.OpenMeteo
+namespace Infrastructure.ExternalServices.WeatherHistory.OpenMeteo
 {
-    internal class OpenMeteoWeatherService : IWeatherHistoryService
+    internal class OpenMeteoWeatherHistoryService : IWeatherHistoryService
     {
         //TODO put this in config
         const int ANALYZE_LAST_HOURS = 2;
         const string SERVICE_CODE = "OpenMeteo";
 
         private readonly HttpClient _httpClient;
-        private readonly ILogger<OpenMeteoWeatherService> _logger;
+        private readonly ILogger<OpenMeteoWeatherHistoryService> _logger;
 
-        public OpenMeteoWeatherService(IHttpClientFactory factory, ILogger<OpenMeteoWeatherService> logger)
+        public OpenMeteoWeatherHistoryService(IHttpClientFactory factory, ILogger<OpenMeteoWeatherHistoryService> logger)
         {
             _httpClient = factory.CreateClient();
             _logger = logger;

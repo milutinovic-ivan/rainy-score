@@ -38,6 +38,7 @@ namespace Application.Jobs
                 _logger.LogInformation("Job started");
 
                 int updatedMatchesCount = 0;
+                int skippedMatchesCount = 0;
 
                 var stopwatch = new Stopwatch();
                 stopwatch.Start();
@@ -77,12 +78,18 @@ namespace Application.Jobs
 
                         updatedMatchesCount++;
                     }
+                    else
+                    {
+                        //probably this matches should be deleted
+                        _logger.LogWarning($"Match with fixture id: {matchDetails.FixtureId.Value} has no odds, match skipped for now...");
+                        skippedMatchesCount++;
+                    }
                 }
 
                 //call save changes anyway
                 await _unitOfWork.SaveChangesAsync();
 
-                _logger.LogInformation($"Match details: updated count: {updatedMatchesCount}");
+                _logger.LogInformation($"Match details: updated count: {updatedMatchesCount} ; skipped count: {skippedMatchesCount}");
 
                 stopwatch.Stop();
                 TimeSpan elapsed = stopwatch.Elapsed;

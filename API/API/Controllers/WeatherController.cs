@@ -1,9 +1,6 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using API.Models.Requests;
+﻿using Microsoft.AspNetCore.Mvc;
 using Application.Intefraces;
 using Domain.Entities;
-using System.Threading.Tasks;
 using Application.Models;
 using API.API.Models.Requests;
 
@@ -13,19 +10,19 @@ namespace API.Controllers
     [ApiController]
     public class WeatherController : ControllerBase
     {
-        private readonly IWeatherService _weatherService;
+        private readonly IWeatherForecastService _weatherService;
         private readonly IWeatherHistoryService _weatherHistoryService;
 
-        public WeatherController(IWeatherService weatherService, IWeatherHistoryService weatherHistoryService)
+        public WeatherController(IWeatherForecastService weatherService, IWeatherHistoryService weatherHistoryService)
         {
             _weatherService = weatherService;
             _weatherHistoryService = weatherHistoryService;
         }
 
         [HttpGet("current")]
-        public async Task<ActionResult<WeatherData>> GetCurrentForecast([FromQuery]LocationRequest request)
+        public async Task<ActionResult<WeatherData>> GetCurrentForecast([FromQuery] LocationDateRequest request)
         {
-            var data = await _weatherService.GetCurrentWeatherAsync(request.Lat, request.Long);
+            var data = await _weatherService.GetWeatherForecastResponseAsync(request.Latitude, request.Longitude, request.Date);
             return Ok(data);
         }
 

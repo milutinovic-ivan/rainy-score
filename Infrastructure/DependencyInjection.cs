@@ -4,8 +4,7 @@ using Domain.Interfaces;
 using Infrastructure.ExternalServices.MatchHistory.FootballData;
 using Infrastructure.ExternalServices.MatchLive.ApiFootball;
 using Infrastructure.ExternalServices.Stadium.GooglePlaceApi;
-using Infrastructure.ExternalServices.Weather.OpenMeteo;
-using Infrastructure.ExternalServices.WeatherApi;
+using Infrastructure.ExternalServices.WeatherHistory.OpenMeteo;
 using Infrastructure.Persistence;
 using Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -28,11 +27,9 @@ namespace Infrastructure
 
             services.AddScoped<IUnitOfWork, EfUnitOfWork>();
 
-            services.AddScoped<IWeatherService, WeatherApiWeatherService>();
-
             services.AddScoped<IMatchHistoryService, FootballDataMatchHistoryService>();
 
-            services.AddScoped<IWeatherHistoryService, OpenMeteoWeatherService>();
+            services.AddScoped<IWeatherHistoryService, OpenMeteoWeatherHistoryService>();
 
             services.AddScoped<IStadiumService, GooglePlaceStadiumService>();
 
