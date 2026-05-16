@@ -3,33 +3,33 @@ using Application.Models;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 
-namespace Infrastructure.ExternalServices.WeatherHistory.OpenMeteo
+namespace Infrastructure.ExternalServices.WeatherForecast.OpenMeteo
 {
-    internal class OpenMeteoWeatherHistoryService : IWeatherHistoryService
+    public class OpenMeteoWeatherForecastService : IWeatherForecastService
     {
         //TODO put this in config
         const int ANALYZE_LAST_HOURS = 2;
-        const string SERVICE_CODE = "OpenMeteo";
+        const string SERVICE_CODE = "OpenMeteoForecast";
 
         private readonly HttpClient _httpClient;
-        private readonly ILogger<OpenMeteoWeatherHistoryService> _logger;
+        private readonly ILogger<OpenMeteoWeatherForecastService> _logger;
 
-        public OpenMeteoWeatherHistoryService(IHttpClientFactory factory, ILogger<OpenMeteoWeatherHistoryService> logger)
+        public OpenMeteoWeatherForecastService(IHttpClientFactory factory, ILogger<OpenMeteoWeatherForecastService> logger)
         {
             _httpClient = factory.CreateClient();
             _logger = logger;
         }
 
-        public async Task<string?> GetWeatherHistoryResponseAsync(decimal latitude, decimal longitude, DateOnly date)
+        public async Task<string?> GetWeatherForecastResponseAsync(decimal latitude, decimal longitude, DateOnly date)
         {
             string stringDate = date.ToString("yyyy-MM-dd");
 
-            var url = $"https://archive-api.open-meteo.com/v1/archive?latitude={latitude}&longitude={longitude}&start_date={stringDate}&end_date={stringDate}" +
+            var url = $"https://api.open-meteo.com/v1/forecast?latitude={latitude}&longitude={longitude}&start_date={stringDate}&end_date={stringDate}" +
                 $"&hourly=temperature_2m,dew_point_2m,precipitation,cloud_cover,cloud_cover_low,wind_speed_10m,sunshine_duration,weather_code";
 
             var response = await _httpClient.GetAsync(url);
-            
-            if(!response.IsSuccessStatusCode)
+
+            if (!response.IsSuccessStatusCode)
             {
                 _logger.LogError($"Error while sending open meteo request: {url} response: " +
                     $"{response.StatusCode.ToString()}, {response.Content.ToString()}");
@@ -41,7 +41,7 @@ namespace Infrastructure.ExternalServices.WeatherHistory.OpenMeteo
             return content;
         }
 
-        public WeatherConditionsData PharseWeatherHistoryResponse(string response, TimeOnly time)
+        public WeatherConditionsData PharseWeatherForecastResponse(string response, TimeOnly time)
         {
             //how long before and after match start we summarize rain or snow, shoud be more exact with minutes here
             int hourFrom = time.Hour - ANALYZE_LAST_HOURS;
@@ -50,7 +50,7 @@ namespace Infrastructure.ExternalServices.WeatherHistory.OpenMeteo
             //based on minute calculate real match during hour
             int hourDuring = time.Minute < 30 ? time.Hour : time.Hour + 1;
 
-            var openMeteoResponse = JsonSerializer.Deserialize<OpenMeteoHistoryResponse>(response);
+            var openMeteoResponse = JsonSerializer.Deserialize<OpenMeteoForecastResponse>(response);
 
             var weatherConditionsData = new WeatherConditionsData();
 

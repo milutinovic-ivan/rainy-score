@@ -1,6 +1,6 @@
 ﻿namespace Infrastructure.ExternalServices.WeatherHistory.OpenMeteo
 {
-    public class OpenMeteoResponse
+    public class OpenMeteoHistoryResponse
     {
         public decimal latitude { get; set; }
         public decimal longitude { get; set; }

@@ -44,7 +44,8 @@ namespace Application.Jobs
                 stopwatch.Start();
 
                 //get all matches for today, TODO should be date sent to job as parameter
-                var runDate = DateOnly.FromDateTime(DateTime.Today);
+                var nowUtc = DateTime.UtcNow;
+                var runDate = DateOnly.FromDateTime(nowUtc);
 
                 var runDateMatchDetailsList = await _matchDetailsRepository.GetAllAsync(md => md.Where(m => m.MatchDate == runDate));
 

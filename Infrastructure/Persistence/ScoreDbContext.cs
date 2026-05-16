@@ -32,6 +32,14 @@ namespace Infrastructure.Persistence
             //to confirm 1 to 1 relationship in database
             modelBuilder.Entity<WeatherCondition>().HasIndex(w => w.MatchDetailsId).IsUnique();
 
+            modelBuilder.Entity<MatchDetails>()
+                .Property(md => md.GoalsOver25Odds)
+                .HasColumnName("goals_over_2_5_odds");
+
+            modelBuilder.Entity<MatchDetails>()
+                .Property(md => md.GoalsUnder25Odds)
+                .HasColumnName("goals_under_2_5_odds");
+
             //data seeding
             modelBuilder.Entity<Country>().HasData(
                 new Country { Id = 1, Name = "England", ShortCode = "ENG", CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc) },

@@ -54,7 +54,8 @@ namespace Application.Jobs
 
                 //TODO
                 //1. send data from job somehow, I will need to run job for yesterday and for today, FIX THIS
-                var runDate = DateOnly.FromDateTime(DateTime.Today);
+                var nowUtc = DateTime.UtcNow;
+                var runDate = DateOnly.FromDateTime(nowUtc);
 
                 //call service implementation to get list of match details
                 var matchDetailsDataList = await _matchLiveService.GetMatchDetailsListAsync(runDate);
@@ -62,12 +63,14 @@ namespace Application.Jobs
                 //get all existing data from db
                 var allTeams = await _teamRepository.GetAllAsync();
                 var allContries = await _countryRepository.GetAllAsync();
+                var allLeagues = await _leagueRepository.GetAllAsync(l => l.Include(l => l.Country));
                 var allleagueExternalMaps = await _leagueExternalMapRepository.GetAllAsync(lem => lem.Include(lem => lem.League));
                 var runDateMatchDetailsList = await _matchDetailsRepository.GetAllAsync(md => md.Where(m => m.MatchDate == runDate));
 
                 //put results in dicts to not query db every time
                 var teamsCache = allTeams.ToDictionary(t => t.Name.Trim(), t => t, StringComparer.OrdinalIgnoreCase);
                 var countryCache = allContries.ToDictionary(c => c.Name.Trim(), c => c, StringComparer.OrdinalIgnoreCase);
+                var leagueCache = allLeagues.ToDictionary(l => (l.Name.Trim(), l.Country.Name.Trim()), l => l);
                 var leagueExternalMapCache = allleagueExternalMaps.ToDictionary(l => (l.DataSource, l.ExternalLeagueId), l => l);
                 var matchDetailsCache = runDateMatchDetailsList.Where(md => md.FixtureId != null).ToDictionary(md => md.FixtureId!.Value, md => md);
 
@@ -87,7 +90,7 @@ namespace Application.Jobs
                         continue;
                     }
 
-                    //if match is finished but there is no full time remove match if exists and skip
+                    //if match is finished but there is no full time result, remove match if exists and skip
                     if (matchDetailsData.Status == "FT" && (matchDetailsData.FullTimeHomeGoals is null || matchDetailsData.FullTimeAwayGoals is null))
                     {
                         if(matchDetailsCache.TryGetValue(matchDetailsData.FixtureId.Value, out var matchToDelete))
@@ -122,39 +125,48 @@ namespace Application.Jobs
                     }
 
 
-                    //leagues
+                    //leagues, one league can have multiple external maps, this means multiple DataSources(ApiFootball, OddsApi...)
+                    //first check if external map exists, if not add it but use existing league, if league exists with that name for that country or add new league
                     var leagueExternalMapKey = (matchDetailsData.DataSource, matchDetailsData.ExternalLeagueId.Value);
+
+                    var leagueKey = (matchDetailsData.LeagueName!.Trim(), country.Name.Trim());
 
                     if (!leagueExternalMapCache.TryGetValue(leagueExternalMapKey, out var leagueExternalMap))
                     {
-                        //insert new League
-                        var league = new League();
-
-                        //if service is implemented get league data from implementation
-                        if (_matchLiveService is ILeagueService leagueService)
+                        //add new league just if not exists
+                        if (!leagueCache.TryGetValue(leagueKey, out var league))
                         {
-                            var leagueData = await leagueService.GetLeagueDataAsync(matchDetailsData.ExternalLeagueId.Value);
+                            //insert new League
+                            league = new League();
 
-                            if (leagueData is null)
+                            //if service is implemented get league data from implementation
+                            if (_matchLiveService is ILeagueService leagueService)
                             {
-                                _logger.LogWarning($"Match skipped... LeagueService returned null");
-                                continue;
+                                var leagueData = await leagueService.GetLeagueDataAsync(matchDetailsData.ExternalLeagueId.Value);
+
+                                if (leagueData is null)
+                                {
+                                    _logger.LogWarning($"Match skipped... LeagueService returned null");
+                                    continue;
+                                }
+
+                                league.Name = leagueData!.Name;
+                                league.Country = country;
+                                league.IsCup = leagueData.IsCup;
+                            }
+                            else
+                            {
+                                league.Name = matchDetailsData.LeagueName!;
+                                league.Country = country;
+                                league.IsCup = matchDetailsData.IsCup ?? false;
                             }
 
-                            league.Name = leagueData!.Name;
-                            league.Country = country;
-                            league.IsCup = leagueData.IsCup;
-                        }
-                        else
-                        {
-                            league.Name = matchDetailsData.LeagueName!;
-                            league.Country = country;
-                            league.IsCup = matchDetailsData.IsCup ?? false;
-                        }
+                            //add new league to database and dictonary
+                            await _leagueRepository.AddAsync(league);
+                            leagueCache.Add(leagueKey, league);
 
-                        await _leagueRepository.AddAsync(league);
-
-                        _logger.LogInformation($"League added... Name: {league.Name}");
+                            _logger.LogInformation($"League added... Name: {league.Name}");
+                        }
 
                         //insert new LeagueExternalMap
                         leagueExternalMap = new LeagueExternalMap

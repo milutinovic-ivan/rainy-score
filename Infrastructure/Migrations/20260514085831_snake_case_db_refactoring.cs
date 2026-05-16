@@ -1,0 +1,874 @@
+﻿using Microsoft.EntityFrameworkCore.Migrations;
+
+#nullable disable
+
+namespace Infrastructure.Migrations
+{
+    /// <inheritdoc />
+    public partial class snake_case_db_refactoring : Migration
+    {
+        /// <inheritdoc />
+        protected override void Up(MigrationBuilder migrationBuilder)
+        {
+            // Rename tables to snake_case plural
+            migrationBuilder.RenameTable(
+                name: "Countries",
+                newName: "countries");
+
+            migrationBuilder.RenameTable(
+                name: "LeagueExternalMaps",
+                newName: "league_external_maps");
+
+            migrationBuilder.RenameTable(
+                name: "Leagues",
+                newName: "leagues");
+
+            migrationBuilder.RenameTable(
+                name: "MatchDetails",
+                newName: "match_details");
+
+            migrationBuilder.RenameTable(
+                name: "Stadiums",
+                newName: "stadiums");
+
+            migrationBuilder.RenameTable(
+                name: "Teams",
+                newName: "teams");
+
+            migrationBuilder.RenameTable(
+                name: "WeatherConditions",
+                newName: "weather_conditions");
+
+            // Countries columns
+            migrationBuilder.RenameColumn(
+                name: "Id",
+                table: "countries",
+                newName: "id");
+
+            migrationBuilder.RenameColumn(
+                name: "Name",
+                table: "countries",
+                newName: "name");
+
+            migrationBuilder.RenameColumn(
+                name: "ShortCode",
+                table: "countries",
+                newName: "short_code");
+
+            migrationBuilder.RenameColumn(
+                name: "CreatedAt",
+                table: "countries",
+                newName: "created_at");
+
+            // LeagueExternalMaps columns
+            migrationBuilder.RenameColumn(
+                name: "Id",
+                table: "league_external_maps",
+                newName: "id");
+
+            migrationBuilder.RenameColumn(
+                name: "LeagueId",
+                table: "league_external_maps",
+                newName: "league_id");
+
+            migrationBuilder.RenameColumn(
+                name: "DataSource",
+                table: "league_external_maps",
+                newName: "data_source");
+
+            migrationBuilder.RenameColumn(
+                name: "ExternalLeagueId",
+                table: "league_external_maps",
+                newName: "external_league_id");
+
+            migrationBuilder.RenameColumn(
+                name: "CreatedAt",
+                table: "league_external_maps",
+                newName: "created_at");
+
+            // Leagues columns
+            migrationBuilder.RenameColumn(
+                name: "Id",
+                table: "leagues",
+                newName: "id");
+
+            migrationBuilder.RenameColumn(
+                name: "Name",
+                table: "leagues",
+                newName: "name");
+
+            migrationBuilder.RenameColumn(
+                name: "ShortCode",
+                table: "leagues",
+                newName: "short_code");
+
+            migrationBuilder.RenameColumn(
+                name: "CountryId",
+                table: "leagues",
+                newName: "country_id");
+
+            migrationBuilder.RenameColumn(
+                name: "CreatedAt",
+                table: "leagues",
+                newName: "created_at");
+
+            migrationBuilder.RenameColumn(
+                name: "IsCup",
+                table: "leagues",
+                newName: "is_cup");
+
+            // MatchDetails columns
+            migrationBuilder.RenameColumn(
+                name: "Id",
+                table: "match_details",
+                newName: "id");
+
+            migrationBuilder.RenameColumn(
+                name: "LeagueId",
+                table: "match_details",
+                newName: "league_id");
+
+            migrationBuilder.RenameColumn(
+                name: "Season",
+                table: "match_details",
+                newName: "season");
+
+            migrationBuilder.RenameColumn(
+                name: "MatchDate",
+                table: "match_details",
+                newName: "match_date");
+
+            migrationBuilder.RenameColumn(
+                name: "MatchTime",
+                table: "match_details",
+                newName: "match_time");
+
+            migrationBuilder.RenameColumn(
+                name: "HomeTeamId",
+                table: "match_details",
+                newName: "home_team_id");
+
+            migrationBuilder.RenameColumn(
+                name: "AwayTeamId",
+                table: "match_details",
+                newName: "away_team_id");
+
+            migrationBuilder.RenameColumn(
+                name: "FullTimeHomeGoals",
+                table: "match_details",
+                newName: "full_time_home_goals");
+
+            migrationBuilder.RenameColumn(
+                name: "FullTimeAwayGoals",
+                table: "match_details",
+                newName: "full_time_away_goals");
+
+            migrationBuilder.RenameColumn(
+                name: "FullTimeWiner",
+                table: "match_details",
+                newName: "full_time_winer");
+
+            migrationBuilder.RenameColumn(
+                name: "HalfTimeHomeGoals",
+                table: "match_details",
+                newName: "half_time_home_goals");
+
+            migrationBuilder.RenameColumn(
+                name: "HalfTimeAwayGoals",
+                table: "match_details",
+                newName: "half_time_away_goals");
+
+            migrationBuilder.RenameColumn(
+                name: "HalfTimeWiner",
+                table: "match_details",
+                newName: "half_time_winer");
+
+            migrationBuilder.RenameColumn(
+                name: "HomeWinOdds",
+                table: "match_details",
+                newName: "home_win_odds");
+
+            migrationBuilder.RenameColumn(
+                name: "DrawWinOdds",
+                table: "match_details",
+                newName: "draw_win_odds");
+
+            migrationBuilder.RenameColumn(
+                name: "AwayWinOdds",
+                table: "match_details",
+                newName: "away_win_odds");
+
+            migrationBuilder.RenameColumn(
+                name: "CreatedAt",
+                table: "match_details",
+                newName: "created_at");
+
+            migrationBuilder.RenameColumn(
+                name: "IsHistory",
+                table: "match_details",
+                newName: "is_history");
+
+            migrationBuilder.RenameColumn(
+                name: "DataSource",
+                table: "match_details",
+                newName: "data_source");
+
+            migrationBuilder.RenameColumn(
+                name: "FixtureId",
+                table: "match_details",
+                newName: "fixture_id");
+
+            migrationBuilder.RenameColumn(
+                name: "OriginalResponseOdds",
+                table: "match_details",
+                newName: "original_response_odds");
+
+            migrationBuilder.RenameColumn(
+                name: "Status",
+                table: "match_details",
+                newName: "status");
+
+            migrationBuilder.RenameColumn(
+                name: "GoalsOver25Odds",
+                table: "match_details",
+                newName: "goals_over_2_5_odds");
+
+            migrationBuilder.RenameColumn(
+                name: "GoalsUnder25Odds",
+                table: "match_details",
+                newName: "goals_under_2_5_odds");
+
+            migrationBuilder.RenameColumn(
+                name: "BookmakerId",
+                table: "match_details",
+                newName: "bookmaker_id");
+
+            migrationBuilder.RenameColumn(
+                name: "BookmakerName",
+                table: "match_details",
+                newName: "bookmaker_name");
+
+            // Stadiums columns
+            migrationBuilder.RenameColumn(
+                name: "Id",
+                table: "stadiums",
+                newName: "id");
+
+            migrationBuilder.RenameColumn(
+                name: "Name",
+                table: "stadiums",
+                newName: "name");
+
+            migrationBuilder.RenameColumn(
+                name: "Latitude",
+                table: "stadiums",
+                newName: "latitude");
+
+            migrationBuilder.RenameColumn(
+                name: "Longitude",
+                table: "stadiums",
+                newName: "longitude");
+
+            migrationBuilder.RenameColumn(
+                name: "CreatedAt",
+                table: "stadiums",
+                newName: "created_at");
+
+            // Teams columns
+            migrationBuilder.RenameColumn(
+                name: "Id",
+                table: "teams",
+                newName: "id");
+
+            migrationBuilder.RenameColumn(
+                name: "Name",
+                table: "teams",
+                newName: "name");
+
+            migrationBuilder.RenameColumn(
+                name: "ShortCode",
+                table: "teams",
+                newName: "short_code");
+
+            migrationBuilder.RenameColumn(
+                name: "StadiumId",
+                table: "teams",
+                newName: "stadium_id");
+
+            migrationBuilder.RenameColumn(
+                name: "CreatedAt",
+                table: "teams",
+                newName: "created_at");
+
+            // WeatherConditions columns
+            migrationBuilder.RenameColumn(
+                name: "Id",
+                table: "weather_conditions",
+                newName: "id");
+
+            migrationBuilder.RenameColumn(
+                name: "MatchDetailsId",
+                table: "weather_conditions",
+                newName: "match_details_id");
+
+            migrationBuilder.RenameColumn(
+                name: "Latitude",
+                table: "weather_conditions",
+                newName: "latitude");
+
+            migrationBuilder.RenameColumn(
+                name: "Longitude",
+                table: "weather_conditions",
+                newName: "longitude");
+
+            migrationBuilder.RenameColumn(
+                name: "Temperature2m",
+                table: "weather_conditions",
+                newName: "temperature_2m");
+
+            migrationBuilder.RenameColumn(
+                name: "DewPoint2m",
+                table: "weather_conditions",
+                newName: "dew_point_2m");
+
+            migrationBuilder.RenameColumn(
+                name: "Precipitation",
+                table: "weather_conditions",
+                newName: "precipitation");
+
+            migrationBuilder.RenameColumn(
+                name: "CloudCover",
+                table: "weather_conditions",
+                newName: "cloud_cover");
+
+            migrationBuilder.RenameColumn(
+                name: "CloudCoverLow",
+                table: "weather_conditions",
+                newName: "cloud_cover_low");
+
+            migrationBuilder.RenameColumn(
+                name: "WindSpeed10m",
+                table: "weather_conditions",
+                newName: "wind_speed_10m");
+
+            migrationBuilder.RenameColumn(
+                name: "SunshineDuration",
+                table: "weather_conditions",
+                newName: "sunshine_duration");
+
+            migrationBuilder.RenameColumn(
+                name: "WeatherCode",
+                table: "weather_conditions",
+                newName: "weather_code");
+
+            migrationBuilder.RenameColumn(
+                name: "WeatherServiceCode",
+                table: "weather_conditions",
+                newName: "weather_service_code");
+
+            migrationBuilder.RenameColumn(
+                name: "OriginalResponse",
+                table: "weather_conditions",
+                newName: "original_response");
+
+            migrationBuilder.RenameColumn(
+                name: "CreatedAt",
+                table: "weather_conditions",
+                newName: "created_at");
+
+            // Rename indexes
+            // Countries
+            migrationBuilder.RenameIndex(
+                name: "IX_Countries_Name",
+                table: "countries",
+                newName: "ix_countries_name");
+
+            migrationBuilder.RenameIndex(
+                name: "IX_Countries_ShortCode",
+                table: "countries",
+                newName: "ix_countries_short_code");
+
+            // LeagueExternalMaps
+            migrationBuilder.RenameIndex(
+                name: "IX_LeagueExternalMaps_ExternalLeagueId_DataSource",
+                table: "league_external_maps",
+                newName: "ix_league_external_maps_external_league_id_data_source");
+
+            migrationBuilder.RenameIndex(
+                name: "IX_LeagueExternalMaps_LeagueId_DataSource",
+                table: "league_external_maps",
+                newName: "ix_league_external_maps_league_id_data_source");
+
+            // Leagues
+            migrationBuilder.RenameIndex(
+                name: "IX_Leagues_CountryId",
+                table: "leagues",
+                newName: "ix_leagues_country_id");
+
+            // MatchDetails
+            migrationBuilder.RenameIndex(
+                name: "IX_MatchDetails_AwayTeamId",
+                table: "match_details",
+                newName: "ix_match_details_away_team_id");
+
+            migrationBuilder.RenameIndex(
+                name: "IX_MatchDetails_DataSource_FixtureId",
+                table: "match_details",
+                newName: "ix_match_details_data_source_fixture_id");
+
+            migrationBuilder.RenameIndex(
+                name: "IX_MatchDetails_HomeTeamId",
+                table: "match_details",
+                newName: "ix_match_details_home_team_id");
+
+            migrationBuilder.RenameIndex(
+                name: "IX_MatchDetails_LeagueId",
+                table: "match_details",
+                newName: "ix_match_details_league_id");
+
+            // Teams
+            migrationBuilder.RenameIndex(
+                name: "IX_Teams_StadiumId",
+                table: "teams",
+                newName: "ix_teams_stadium_id");
+
+            // WeatherConditions
+            migrationBuilder.RenameIndex(
+                name: "IX_WeatherConditions_MatchDetailsId",
+                table: "weather_conditions",
+                newName: "ix_weather_conditions_match_details_id");
+        }
+
+        /// <inheritdoc />
+        protected override void Down(MigrationBuilder migrationBuilder)
+        {
+            // Revert table renames
+            migrationBuilder.RenameTable(
+                name: "countries",
+                newName: "Countries");
+
+            migrationBuilder.RenameTable(
+                name: "league_external_maps",
+                newName: "LeagueExternalMaps");
+
+            migrationBuilder.RenameTable(
+                name: "leagues",
+                newName: "Leagues");
+
+            migrationBuilder.RenameTable(
+                name: "match_details",
+                newName: "MatchDetails");
+
+            migrationBuilder.RenameTable(
+                name: "stadiums",
+                newName: "Stadiums");
+
+            migrationBuilder.RenameTable(
+                name: "teams",
+                newName: "Teams");
+
+            migrationBuilder.RenameTable(
+                name: "weather_conditions",
+                newName: "WeatherConditions");
+
+            // Countries columns
+            migrationBuilder.RenameColumn(
+                name: "id",
+                table: "Countries",
+                newName: "Id");
+
+            migrationBuilder.RenameColumn(
+                name: "name",
+                table: "Countries",
+                newName: "Name");
+
+            migrationBuilder.RenameColumn(
+                name: "short_code",
+                table: "Countries",
+                newName: "ShortCode");
+
+            migrationBuilder.RenameColumn(
+                name: "created_at",
+                table: "Countries",
+                newName: "CreatedAt");
+
+            // LeagueExternalMaps columns
+            migrationBuilder.RenameColumn(
+                name: "id",
+                table: "LeagueExternalMaps",
+                newName: "Id");
+
+            migrationBuilder.RenameColumn(
+                name: "league_id",
+                table: "LeagueExternalMaps",
+                newName: "LeagueId");
+
+            migrationBuilder.RenameColumn(
+                name: "data_source",
+                table: "LeagueExternalMaps",
+                newName: "DataSource");
+
+            migrationBuilder.RenameColumn(
+                name: "external_league_id",
+                table: "LeagueExternalMaps",
+                newName: "ExternalLeagueId");
+
+            migrationBuilder.RenameColumn(
+                name: "created_at",
+                table: "LeagueExternalMaps",
+                newName: "CreatedAt");
+
+            // Leagues columns
+            migrationBuilder.RenameColumn(
+                name: "id",
+                table: "Leagues",
+                newName: "Id");
+
+            migrationBuilder.RenameColumn(
+                name: "name",
+                table: "Leagues",
+                newName: "Name");
+
+            migrationBuilder.RenameColumn(
+                name: "short_code",
+                table: "Leagues",
+                newName: "ShortCode");
+
+            migrationBuilder.RenameColumn(
+                name: "country_id",
+                table: "Leagues",
+                newName: "CountryId");
+
+            migrationBuilder.RenameColumn(
+                name: "created_at",
+                table: "Leagues",
+                newName: "CreatedAt");
+
+            migrationBuilder.RenameColumn(
+                name: "is_cup",
+                table: "Leagues",
+                newName: "IsCup");
+
+            // MatchDetails columns
+            migrationBuilder.RenameColumn(
+                name: "id",
+                table: "MatchDetails",
+                newName: "Id");
+
+            migrationBuilder.RenameColumn(
+                name: "league_id",
+                table: "MatchDetails",
+                newName: "LeagueId");
+
+            migrationBuilder.RenameColumn(
+                name: "season",
+                table: "MatchDetails",
+                newName: "Season");
+
+            migrationBuilder.RenameColumn(
+                name: "match_date",
+                table: "MatchDetails",
+                newName: "MatchDate");
+
+            migrationBuilder.RenameColumn(
+                name: "match_time",
+                table: "MatchDetails",
+                newName: "MatchTime");
+
+            migrationBuilder.RenameColumn(
+                name: "home_team_id",
+                table: "MatchDetails",
+                newName: "HomeTeamId");
+
+            migrationBuilder.RenameColumn(
+                name: "away_team_id",
+                table: "MatchDetails",
+                newName: "AwayTeamId");
+
+            migrationBuilder.RenameColumn(
+                name: "full_time_home_goals",
+                table: "MatchDetails",
+                newName: "FullTimeHomeGoals");
+
+            migrationBuilder.RenameColumn(
+                name: "full_time_away_goals",
+                table: "MatchDetails",
+                newName: "FullTimeAwayGoals");
+
+            migrationBuilder.RenameColumn(
+                name: "full_time_winer",
+                table: "MatchDetails",
+                newName: "FullTimeWiner");
+
+            migrationBuilder.RenameColumn(
+                name: "half_time_home_goals",
+                table: "MatchDetails",
+                newName: "HalfTimeHomeGoals");
+
+            migrationBuilder.RenameColumn(
+                name: "half_time_away_goals",
+                table: "MatchDetails",
+                newName: "HalfTimeAwayGoals");
+
+            migrationBuilder.RenameColumn(
+                name: "half_time_winer",
+                table: "MatchDetails",
+                newName: "HalfTimeWiner");
+
+            migrationBuilder.RenameColumn(
+                name: "home_win_odds",
+                table: "MatchDetails",
+                newName: "HomeWinOdds");
+
+            migrationBuilder.RenameColumn(
+                name: "draw_win_odds",
+                table: "MatchDetails",
+                newName: "DrawWinOdds");
+
+            migrationBuilder.RenameColumn(
+                name: "away_win_odds",
+                table: "MatchDetails",
+                newName: "AwayWinOdds");
+
+            migrationBuilder.RenameColumn(
+                name: "created_at",
+                table: "MatchDetails",
+                newName: "CreatedAt");
+
+            migrationBuilder.RenameColumn(
+                name: "is_history",
+                table: "MatchDetails",
+                newName: "IsHistory");
+
+            migrationBuilder.RenameColumn(
+                name: "data_source",
+                table: "MatchDetails",
+                newName: "DataSource");
+
+            migrationBuilder.RenameColumn(
+                name: "fixture_id",
+                table: "MatchDetails",
+                newName: "FixtureId");
+
+            migrationBuilder.RenameColumn(
+                name: "original_response_odds",
+                table: "MatchDetails",
+                newName: "OriginalResponseOdds");
+
+            migrationBuilder.RenameColumn(
+                name: "status",
+                table: "MatchDetails",
+                newName: "Status");
+
+            migrationBuilder.RenameColumn(
+                name: "goals_over_2_5_odds",
+                table: "MatchDetails",
+                newName: "GoalsOver25Odds");
+
+            migrationBuilder.RenameColumn(
+                name: "goals_under_2_5_odds",
+                table: "MatchDetails",
+                newName: "GoalsUnder25Odds");
+
+            migrationBuilder.RenameColumn(
+                name: "bookmaker_id",
+                table: "MatchDetails",
+                newName: "BookmakerId");
+
+            migrationBuilder.RenameColumn(
+                name: "bookmaker_name",
+                table: "MatchDetails",
+                newName: "BookmakerName");
+
+            // Stadiums columns
+            migrationBuilder.RenameColumn(
+                name: "id",
+                table: "Stadiums",
+                newName: "Id");
+
+            migrationBuilder.RenameColumn(
+                name: "name",
+                table: "Stadiums",
+                newName: "Name");
+
+            migrationBuilder.RenameColumn(
+                name: "latitude",
+                table: "Stadiums",
+                newName: "Latitude");
+
+            migrationBuilder.RenameColumn(
+                name: "longitude",
+                table: "Stadiums",
+                newName: "Longitude");
+
+            migrationBuilder.RenameColumn(
+                name: "created_at",
+                table: "Stadiums",
+                newName: "CreatedAt");
+
+            // Teams columns
+            migrationBuilder.RenameColumn(
+                name: "id",
+                table: "Teams",
+                newName: "Id");
+
+            migrationBuilder.RenameColumn(
+                name: "name",
+                table: "Teams",
+                newName: "Name");
+
+            migrationBuilder.RenameColumn(
+                name: "short_code",
+                table: "Teams",
+                newName: "ShortCode");
+
+            migrationBuilder.RenameColumn(
+                name: "stadium_id",
+                table: "Teams",
+                newName: "StadiumId");
+
+            migrationBuilder.RenameColumn(
+                name: "created_at",
+                table: "Teams",
+                newName: "CreatedAt");
+
+            // WeatherConditions columns
+            migrationBuilder.RenameColumn(
+                name: "id",
+                table: "WeatherConditions",
+                newName: "Id");
+
+            migrationBuilder.RenameColumn(
+                name: "match_details_id",
+                table: "WeatherConditions",
+                newName: "MatchDetailsId");
+
+            migrationBuilder.RenameColumn(
+                name: "latitude",
+                table: "WeatherConditions",
+                newName: "Latitude");
+
+            migrationBuilder.RenameColumn(
+                name: "longitude",
+                table: "WeatherConditions",
+                newName: "Longitude");
+
+            migrationBuilder.RenameColumn(
+                name: "temperature_2m",
+                table: "WeatherConditions",
+                newName: "Temperature2m");
+
+            migrationBuilder.RenameColumn(
+                name: "dew_point_2m",
+                table: "WeatherConditions",
+                newName: "DewPoint2m");
+
+            migrationBuilder.RenameColumn(
+                name: "precipitation",
+                table: "WeatherConditions",
+                newName: "Precipitation");
+
+            migrationBuilder.RenameColumn(
+                name: "cloud_cover",
+                table: "WeatherConditions",
+                newName: "CloudCover");
+
+            migrationBuilder.RenameColumn(
+                name: "cloud_cover_low",
+                table: "WeatherConditions",
+                newName: "CloudCoverLow");
+
+            migrationBuilder.RenameColumn(
+                name: "wind_speed_10m",
+                table: "WeatherConditions",
+                newName: "WindSpeed10m");
+
+            migrationBuilder.RenameColumn(
+                name: "sunshine_duration",
+                table: "WeatherConditions",
+                newName: "SunshineDuration");
+
+            migrationBuilder.RenameColumn(
+                name: "weather_code",
+                table: "WeatherConditions",
+                newName: "WeatherCode");
+
+            migrationBuilder.RenameColumn(
+                name: "weather_service_code",
+                table: "WeatherConditions",
+                newName: "WeatherServiceCode");
+
+            migrationBuilder.RenameColumn(
+                name: "original_response",
+                table: "WeatherConditions",
+                newName: "OriginalResponse");
+
+            migrationBuilder.RenameColumn(
+                name: "created_at",
+                table: "WeatherConditions",
+                newName: "CreatedAt");
+
+            // Rename indexes
+            // Countries
+            migrationBuilder.RenameIndex(
+                name: "ix_countries_name",
+                table: "Countries",
+                newName: "IX_Countries_Name");
+
+            migrationBuilder.RenameIndex(
+                name: "ix_countries_short_code",
+                table: "Countries",
+                newName: "IX_Countries_ShortCode");
+
+            // LeagueExternalMaps
+            migrationBuilder.RenameIndex(
+                name: "ix_league_external_maps_external_league_id_data_source",
+                table: "LeagueExternalMaps",
+                newName: "IX_LeagueExternalMaps_ExternalLeagueId_DataSource");
+
+            migrationBuilder.RenameIndex(
+                name: "ix_league_external_maps_league_id_data_source",
+                table: "LeagueExternalMaps",
+                newName: "IX_LeagueExternalMaps_LeagueId_DataSource");
+
+            // Leagues
+            migrationBuilder.RenameIndex(
+                name: "ix_leagues_country_id",
+                table: "Leagues",
+                newName: "IX_Leagues_CountryId");
+
+            // MatchDetails
+            migrationBuilder.RenameIndex(
+                name: "ix_match_details_away_team_id",
+                table: "MatchDetails",
+                newName: "IX_MatchDetails_AwayTeamId");
+
+            migrationBuilder.RenameIndex(
+                name: "ix_match_details_data_source_fixture_id",
+                table: "MatchDetails",
+                newName: "IX_MatchDetails_DataSource_FixtureId");
+
+            migrationBuilder.RenameIndex(
+                name: "ix_match_details_home_team_id",
+                table: "MatchDetails",
+                newName: "IX_MatchDetails_HomeTeamId");
+
+            migrationBuilder.RenameIndex(
+                name: "ix_match_details_league_id",
+                table: "MatchDetails",
+                newName: "IX_MatchDetails_LeagueId");
+
+            // Teams
+            migrationBuilder.RenameIndex(
+                name: "ix_teams_stadium_id",
+                table: "Teams",
+                newName: "IX_Teams_StadiumId");
+
+            // WeatherConditions
+            migrationBuilder.RenameIndex(
+                name: "ix_weather_conditions_match_details_id",
+                table: "WeatherConditions",
+                newName: "IX_WeatherConditions_MatchDetailsId");
+        }
+    }
+}
