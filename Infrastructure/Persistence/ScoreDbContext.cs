@@ -40,6 +40,18 @@ namespace Infrastructure.Persistence
                 .Property(md => md.GoalsUnder25Odds)
                 .HasColumnName("goals_under_2_5_odds");
 
+            modelBuilder.Entity<WeatherCondition>()
+                .Property(wc => wc.DewPoint2m)
+                .HasColumnName("dew_point_2m");
+
+            modelBuilder.Entity<WeatherCondition>()
+                .Property(wc => wc.Temperature2m)
+                .HasColumnName("temperature_2m");
+
+            modelBuilder.Entity<WeatherCondition>()
+                .Property(wc => wc.WindSpeed10m)
+                .HasColumnName("wind_speed_10m");
+
             //data seeding
             modelBuilder.Entity<Country>().HasData(
                 new Country { Id = 1, Name = "England", ShortCode = "ENG", CreatedAt = new DateTime(2025, 10, 28, 0, 0, 0, 0, DateTimeKind.Utc) },

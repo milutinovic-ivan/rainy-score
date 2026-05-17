@@ -13,7 +13,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(ScoreDbContext))]
-    [Migration("20260514085831_snake_case_db_refactoring")]
+    [Migration("20260517153411_snake_case_db_refactoring")]
     partial class snake_case_db_refactoring
     {
         /// <inheritdoc />
@@ -746,7 +746,8 @@ namespace Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<decimal>("DewPoint2m")
-                        .HasColumnType("numeric");
+                        .HasColumnType("numeric")
+                        .HasColumnName("dew_point_2m");
 
                     b.Property<decimal>("Latitude")
                         .HasColumnType("numeric");
@@ -768,7 +769,8 @@ namespace Infrastructure.Migrations
                         .HasColumnType("numeric");
 
                     b.Property<decimal>("Temperature2m")
-                        .HasColumnType("numeric");
+                        .HasColumnType("numeric")
+                        .HasColumnName("temperature_2m");
 
                     b.Property<int>("WeatherCode")
                         .HasColumnType("integer");
@@ -778,7 +780,8 @@ namespace Infrastructure.Migrations
                         .HasColumnType("text");
 
                     b.Property<decimal>("WindSpeed10m")
-                        .HasColumnType("numeric");
+                        .HasColumnType("numeric")
+                        .HasColumnName("wind_speed_10m");
 
                     b.HasKey("Id");
 

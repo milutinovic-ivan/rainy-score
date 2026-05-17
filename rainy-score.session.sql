@@ -61,3 +61,9 @@ order by md.match_time desc
 select * from teams
 where stadium_id is null
 
+select * from league_external_maps
+
+select md.fixture_id, * from match_details md
+where md.match_date = current_date and
+md.original_response_odds is not null
+

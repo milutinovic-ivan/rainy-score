@@ -55,7 +55,7 @@ namespace Application.Jobs
                     _logger.LogInformation($"Processing match details FixtureId: {match.FixtureId}, match date: {match.MatchDate}, match time: {match.MatchTime}");
 
                     //get weather conditions response anyway
-                    if (match.HomeTeam.Stadium.Latitude.HasValue && match.HomeTeam.Stadium.Longitude.HasValue)
+                    if (match.HomeTeam.Stadium?.Latitude is not null && match.HomeTeam.Stadium?.Longitude is not null)
                     {
                         if (serviceRequestCount >= MAX_SERVICE_REQUESTS_PER_EXECUTION)
                         {
@@ -70,6 +70,11 @@ namespace Application.Jobs
                             match.HomeTeam.Stadium.Longitude.Value, match.MatchDate);
 
                         serviceRequestCount++;
+                    }
+                    else
+                    {
+                        _logger.LogError($"For match details id: {match.Id} no stadium data for team: {match.HomeTeam.Name}");
+                        continue;
                     }
 
                     if (originalResponse == null)

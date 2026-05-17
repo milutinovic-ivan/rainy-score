@@ -1,8 +1,10 @@
 ﻿using Application.Intefraces;
 using Application.Models;
+using Application.Models.Configuration;
 using Domain.Entities;
 using Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Quartz;
 using System.Diagnostics;
@@ -20,6 +22,7 @@ namespace Application.Jobs
         private readonly IRepository<MatchDetails> _matchDetailsRepository;
         private readonly IRepository<LeagueExternalMap> _leagueExternalMapRepository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly MatchLiveProviderSettings _providerSettings;
 
         public MatchLiveImportJob(IMatchLiveService matchLiveService, ILogger<MatchLiveImportJob> logger,
            IRepository<Country> countryRepository,
@@ -27,7 +30,7 @@ namespace Application.Jobs
            IRepository<Team> teamRepository,
            IRepository<MatchDetails> matchDetailsRepository,
            IRepository<LeagueExternalMap> leagueExternalMapRepository,
-           IUnitOfWork unitOfWork)
+           IUnitOfWork unitOfWork, IConfiguration configuration)
         {
             _matchLiveService = matchLiveService;
             _logger = logger;
@@ -37,6 +40,11 @@ namespace Application.Jobs
             _matchDetailsRepository = matchDetailsRepository;
             _leagueExternalMapRepository = leagueExternalMapRepository;
             _unitOfWork = unitOfWork;
+
+            _providerSettings = configuration
+                .GetSection($"MatchLiveProviders:{_matchLiveService.ServiceName}")
+                .Get<MatchLiveProviderSettings>()
+                ?? throw new Exception("Missing match live provider config");
         }
 
         public async Task Execute(IJobExecutionContext context)
@@ -56,6 +64,13 @@ namespace Application.Jobs
                 //1. send data from job somehow, I will need to run job for yesterday and for today, FIX THIS
                 var nowUtc = DateTime.UtcNow;
                 var runDate = DateOnly.FromDateTime(nowUtc);
+
+                //calculate delay, if needed
+                TimeSpan? delay = null;
+                if (_providerSettings.RequestsPerMinute.HasValue)
+                {
+                    delay = TimeSpan.FromMinutes(1.0 / _providerSettings.RequestsPerMinute.Value);
+                }
 
                 //call service implementation to get list of match details
                 var matchDetailsDataList = await _matchLiveService.GetMatchDetailsListAsync(runDate);
@@ -142,6 +157,13 @@ namespace Application.Jobs
                             //if service is implemented get league data from implementation
                             if (_matchLiveService is ILeagueService leagueService)
                             {
+                                //apply delay, if needed
+                                if (delay.HasValue)
+                                {
+                                    _logger.LogInformation($"Applying delay of {delay.Value.TotalSeconds} seconds to respect rate limits");
+                                    await Task.Delay(delay.Value, ct);
+                                }
+
                                 var leagueData = await leagueService.GetLeagueDataAsync(matchDetailsData.ExternalLeagueId.Value);
 
                                 if (leagueData is null)

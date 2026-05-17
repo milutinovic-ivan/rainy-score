@@ -1,5 +1,7 @@
 ﻿using Application.Intefraces;
 using Application.Models;
+using Application.Models.Configuration;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.Reflection;
 using System.Text.Json;
@@ -10,20 +12,24 @@ namespace Infrastructure.ExternalServices.MatchLive.ApiFootball
 {
     public class ApiFootballMatchLiveService : IMatchLiveService, ILeagueService
     {
-        const string BASE_URL = "https://v3.football.api-sports.io";
-        const string API_KEY = "33ce4dc10403efcdb4b51782b8e7d73c";
-
-        const string DATA_SOURCE = "apifootball";
-        const string PIMARY_BOOKMAKER = "Bet365";
-
         private readonly HttpClient _httpClient;
         private readonly ILogger<ApiFootballMatchLiveService> _logger;
+        private readonly MatchLiveProviderSettings _providerSettings;
 
-        public ApiFootballMatchLiveService(IHttpClientFactory factory, ILogger<ApiFootballMatchLiveService> logger)
+        public ApiFootballMatchLiveService(IHttpClientFactory factory,
+            ILogger<ApiFootballMatchLiveService> logger,
+            IConfiguration configuration)
         {
             _httpClient = factory.CreateClient();
             _logger = logger;
+
+            _providerSettings = configuration
+                .GetSection($"MatchLiveProviders:{ServiceName}")
+                .Get<MatchLiveProviderSettings>()
+                ?? throw new Exception("Missing match live provider config");
         }
+
+        public string ServiceName => "apifootball";
 
         public async Task<List<MatchDetailsData>> GetMatchDetailsListAsync(DateOnly matchDate)
         {
@@ -51,10 +57,10 @@ namespace Infrastructure.ExternalServices.MatchLive.ApiFootball
 
         private async Task<string?> GetFixturesJsonAsync(DateOnly matchDate)
         {
-            var url = $"{BASE_URL}/fixtures?date={matchDate:yyyy-MM-dd}";
+            var url = $"{_providerSettings.BaseUrl}/fixtures?date={matchDate:yyyy-MM-dd}";
 
             using var request = new HttpRequestMessage(HttpMethod.Get, url);
-            request.Headers.Add("x-apisports-key", API_KEY);
+            request.Headers.Add("x-apisports-key", _providerSettings.ApiKey);
 
             var response = await _httpClient.SendAsync(request);
 
@@ -93,7 +99,7 @@ namespace Infrastructure.ExternalServices.MatchLive.ApiFootball
             {
                 var matchDetails = new MatchDetailsData();
 
-                matchDetails.DataSource = DATA_SOURCE;
+                matchDetails.DataSource = ServiceName;
 
                 //fixture
                 var dateStr = item.GetProperty("fixture").GetProperty("date").GetString();
@@ -169,10 +175,10 @@ namespace Infrastructure.ExternalServices.MatchLive.ApiFootball
 
         private async Task<string?> GetOddsJsonAsync(int fixtureId)
         {
-            var url = $"{BASE_URL}/odds?fixture={fixtureId}";
+            var url = $"{_providerSettings.BaseUrl}/odds?fixture={fixtureId}";
 
             using var request = new HttpRequestMessage(HttpMethod.Get, url);
-            request.Headers.Add("x-apisports-key", API_KEY);
+            request.Headers.Add("x-apisports-key", _providerSettings.ApiKey);
 
             var response = await _httpClient.SendAsync(request);
 
@@ -220,13 +226,13 @@ namespace Infrastructure.ExternalServices.MatchLive.ApiFootball
                 return null;
             }
 
-            // pick PIMARY_BOOKMAKER if exists, else first
+            // pick PrimaryBookmaker if exists, else first
             JsonElement chosenBookmaker = bookmakersEl[0];
 
             foreach (var bm in bookmakersEl.EnumerateArray())
             {
                 var name = bm.GetProperty("name").GetString();
-                if (string.Equals(name, PIMARY_BOOKMAKER, StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(name, _providerSettings.PrimaryBookmaker, StringComparison.OrdinalIgnoreCase))
                 {
                     chosenBookmaker = bm;
                     break;
@@ -297,10 +303,10 @@ namespace Infrastructure.ExternalServices.MatchLive.ApiFootball
 
         private async Task<string?> GetLeagueJsonAsync(int leagueId)
         {
-            var url = $"{BASE_URL}/leagues?id={leagueId}";
+            var url = $"{_providerSettings.BaseUrl}/leagues?id={leagueId}";
 
             using var request = new HttpRequestMessage(HttpMethod.Get, url);
-            request.Headers.Add("x-apisports-key", API_KEY);
+            request.Headers.Add("x-apisports-key", _providerSettings.ApiKey);
 
             var response = await _httpClient.SendAsync(request);
 
