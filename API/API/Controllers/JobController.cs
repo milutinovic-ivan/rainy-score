@@ -17,113 +17,57 @@ namespace API.Controllers
             _logger = logger;
         }
 
+        [HttpPost("run-daily-pipeline")]
+        public async Task<IActionResult> RunDailyPipelineJob()
+        {
+            return await TriggerJob(new JobKey("DailyPipelineJob"));
+        }
+
         [HttpPost("run-match-history-import")]
         public async Task<IActionResult> RunMatchHistoryImportJob()
         {
-            var scheduler = await _schedulerFactory.GetScheduler();
-
-            var jobKey = new JobKey("MatchHistoryImportJob");
-
-            if (!await scheduler.CheckExists(jobKey))
-            {
-                return NotFound("Job not registered in scheduler.");
-            }
-
-            _logger.LogInformation("Manually triggering job at {Time}", DateTime.Now);
-
-            //only queue job for execution, not wait untill job finish
-            await scheduler.TriggerJob(jobKey);
-
-            return Ok("Job triggered successfully.");
+            return await TriggerJob(new JobKey("MatchHistoryImportJob"));
         }
 
         [HttpPost("run-stadium-import")]
         public async Task<IActionResult> RunStadiumImportJob()
         {
-            var scheduler = await _schedulerFactory.GetScheduler();
-
-            var jobKey = new JobKey("StadiumImportJob");
-
-            if (!await scheduler.CheckExists(jobKey))
-            {
-                return NotFound("Job not registered in scheduler.");
-            }
-
-            _logger.LogInformation("Manually triggering job at {Time}", DateTime.Now);
-
-            //only queue job for execution, not wait untill job finish
-            await scheduler.TriggerJob(jobKey);
-
-            return Ok("Job triggered successfully.");
+            return await TriggerJob(new JobKey("StadiumImportJob"));
         }
-
 
         [HttpPost("run-weather-history-import")]
         public async Task<IActionResult> RunWeatherHistoryImportJob()
         {
-            var scheduler = await _schedulerFactory.GetScheduler();
-
-            var jobKey = new JobKey("WeatherHistoryImportJob");
-
-            if (!await scheduler.CheckExists(jobKey))
-            {
-                return NotFound("Job not registered in scheduler.");
-            }
-
-            _logger.LogInformation("Manually triggering job at {Time}", DateTime.Now);
-
-            //only queue job for execution, not wait untill job finish
-            await scheduler.TriggerJob(jobKey);
-
-            return Ok("Job triggered successfully.");
+            return await TriggerJob(new JobKey("WeatherHistoryImportJob"));
         }
 
-        [HttpPost("run-match-live-import")]
-        public async Task<IActionResult> RunMatchLiveImportJob()
+        [HttpPost("run-match-live-import-today")]
+        public async Task<IActionResult> RunMatchLiveImportTodayJob()
         {
-            var scheduler = await _schedulerFactory.GetScheduler();
+            return await TriggerJob(new JobKey("MatchLiveImportJobToday"));
+        }
 
-            var jobKey = new JobKey("MatchLiveImportJob");
-
-            if (!await scheduler.CheckExists(jobKey))
-            {
-                return NotFound("Job not registered in scheduler.");
-            }
-
-            _logger.LogInformation("Manually triggering job at {Time}", DateTime.Now);
-
-            //only queue job for execution, not wait untill job finish
-            await scheduler.TriggerJob(jobKey);
-
-            return Ok("Job triggered successfully.");
+        [HttpPost("run-match-live-import-yesterday")]
+        public async Task<IActionResult> RunMatchLiveImportYesterdayJob()
+        {
+            return await TriggerJob(new JobKey("MatchLiveImportJobYesterday"));
         }
 
         [HttpPost("run-match-odds-import")]
         public async Task<IActionResult> RunMatchOddsImportJob()
         {
-            var scheduler = await _schedulerFactory.GetScheduler();
-
-            var jobKey = new JobKey("MatchOddsImportJob");
-
-            if (!await scheduler.CheckExists(jobKey))
-            {
-                return NotFound("Job not registered in scheduler.");
-            }
-
-            _logger.LogInformation("Manually triggering job at {Time}", DateTime.Now);
-
-            //only queue job for execution, not wait untill job finish
-            await scheduler.TriggerJob(jobKey);
-
-            return Ok("Job triggered successfully.");
+            return await TriggerJob(new JobKey("MatchOddsImportJob"));
         }
 
         [HttpPost("run-weather-forecast-import")]
         public async Task<IActionResult> RunWeatherForecastImportJob()
         {
-            var scheduler = await _schedulerFactory.GetScheduler();
+            return await TriggerJob(new JobKey("WeatherForecastImportJob"));
+        }
 
-            var jobKey = new JobKey("WeatherForecastImportJob");
+        private async Task<IActionResult> TriggerJob(JobKey jobKey)
+        {
+            var scheduler = await _schedulerFactory.GetScheduler();
 
             if (!await scheduler.CheckExists(jobKey))
             {

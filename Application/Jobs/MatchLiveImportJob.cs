@@ -8,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Quartz;
 using System.Diagnostics;
+using System.Diagnostics.Metrics;
 
 namespace Application.Jobs
 {
@@ -60,10 +61,10 @@ namespace Application.Jobs
                 var stopwatch = new Stopwatch();
                 stopwatch.Start();
 
-                //TODO
-                //1. send data from job somehow, I will need to run job for yesterday and for today, FIX THIS
-                var nowUtc = DateTime.UtcNow;
-                var runDate = DateOnly.FromDateTime(nowUtc);
+                //job could be run for today or yesterday
+                var dateOffsetDays = context.MergedJobDataMap.GetIntValue("DateOffsetDays");
+                var runDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(dateOffsetDays));
+                _logger.LogInformation($"Importing live matches for date: {runDate}, date offset days: {dateOffsetDays}");
 
                 //calculate delay, if needed
                 TimeSpan? delay = null;
@@ -91,16 +92,29 @@ namespace Application.Jobs
 
                 int updatedMatches = 0;
                 int insertedMatches = 0;
+                int skippedMatchesWithoutOdds = 0;
+                int skippedMatchesWithoutFullTimeResult = 0;
+                int skippedMatchesIsCup = 0;
 
                 foreach (var matchDetailsData in matchDetailsDataList)
                 {
-                    //match is skipped if there is no league data or competition is cup
+                    //match is skipped if there is no fixture id or data source or external league id
                     if (matchDetailsData.FixtureId is null || matchDetailsData.DataSource is null || matchDetailsData.ExternalLeagueId is null)
                     {
                         _logger.LogWarning($"Match skipped... No FixtureId or DataSource or ExternalLeagueId, " +
                             $"FixtureId: {matchDetailsData.FixtureId} ; " +
                             $"DataSource: {matchDetailsData.DataSource} ; " +
                             $"ExternalLeagueId: {matchDetailsData.ExternalLeagueId}");
+
+                        continue;
+                    }
+
+                    //get league info, if it is cup skip match
+                    LeagueData? leagueData = await GetLeagueInfoAsync(matchDetailsData, delay, ct);
+                    if(leagueData is null || leagueData.IsCup)
+                    {
+                        skippedMatchesIsCup++;
+                        _logger.LogInformation($"Match skipped... null or it is cup not league, LeagueName: {leagueData?.Name} ; ExternalLeagueId: {matchDetailsData.ExternalLeagueId}");
 
                         continue;
                     }
@@ -112,13 +126,38 @@ namespace Application.Jobs
                         {
                             _matchDetailsRepository.Delete(matchToDelete);
                             _logger.LogInformation($"Match deleted... match is finished but there is no full time result");
+                            skippedMatchesWithoutFullTimeResult++;
 
                             continue;
                         }
 
+                        skippedMatchesWithoutFullTimeResult++;
                         _logger.LogInformation($"Match skipped... match is finished but there is no full time result");
+
                         continue;
                     }
+
+                    //get match odds
+                    await ApplyDelayIfNeeded(delay, ct);
+                    var odds = await _matchLiveService.GetMatchOddsAsync(matchDetailsData.FixtureId.Value);
+
+                    if (!HasRequiredOdds(odds))
+                    {
+                        _logger.LogWarning($"Match skipped... No odds data, FixtureId: {matchDetailsData.FixtureId.Value}");
+                        skippedMatchesWithoutOdds++;
+
+                        continue;
+                    }
+
+                    //set ods data
+                    matchDetailsData.BookmakerId = odds.BookmakerId;
+                    matchDetailsData.BookmakerName = odds.BookmakerName;
+                    matchDetailsData.HomeWinOdds = odds.HomeWinOdds;
+                    matchDetailsData.DrawWinOdds = odds.DrawWinOdds;
+                    matchDetailsData.AwayWinOdds = odds.AwayWinOdds;
+                    matchDetailsData.GoalsOver25Odds = odds.GoalsOver25Odds;
+                    matchDetailsData.GoalsUnder25Odds = odds.GoalsUnder25Odds;
+                    matchDetailsData.OriginalResponseOdds = odds.OriginalResponseOdds;
 
                     //countries
                     var normalizedCountryName = string.IsNullOrWhiteSpace(matchDetailsData.Country)
@@ -154,34 +193,9 @@ namespace Application.Jobs
                             //insert new League
                             league = new League();
 
-                            //if service is implemented get league data from implementation
-                            if (_matchLiveService is ILeagueService leagueService)
-                            {
-                                //apply delay, if needed
-                                if (delay.HasValue)
-                                {
-                                    _logger.LogInformation($"Applying delay of {delay.Value.TotalSeconds} seconds to respect rate limits");
-                                    await Task.Delay(delay.Value, ct);
-                                }
-
-                                var leagueData = await leagueService.GetLeagueDataAsync(matchDetailsData.ExternalLeagueId.Value);
-
-                                if (leagueData is null)
-                                {
-                                    _logger.LogWarning($"Match skipped... LeagueService returned null");
-                                    continue;
-                                }
-
-                                league.Name = leagueData!.Name;
-                                league.Country = country;
-                                league.IsCup = leagueData.IsCup;
-                            }
-                            else
-                            {
-                                league.Name = matchDetailsData.LeagueName!;
-                                league.Country = country;
-                                league.IsCup = matchDetailsData.IsCup ?? false;
-                            }
+                            league.Name = leagueData.Name;
+                            league.Country = country;
+                            league.IsCup = leagueData.IsCup;
 
                             //add new league to database and dictonary
                             await _leagueRepository.AddAsync(league);
@@ -202,13 +216,6 @@ namespace Application.Jobs
 
                         //add new LeagueExternalMap in cache dict
                         leagueExternalMapCache.Add(leagueExternalMapKey, leagueExternalMap);
-                    }
-
-                    //league is cup, skip match
-                    if (leagueExternalMap.League.IsCup)
-                    {
-                        _logger.LogInformation($"Match skipped... it is cup not league");
-                        continue;
                     }
 
 
@@ -259,6 +266,14 @@ namespace Application.Jobs
                         existingMatch.HalfTimeAwayGoals = matchDetailsData.HalfTimeAwayGoals;
                         existingMatch.HalfTimeWiner = matchDetailsData.HalfTimeWiner;
                         existingMatch.Status = matchDetailsData.Status;
+                        existingMatch.BookmakerId = matchDetailsData.BookmakerId;
+                        existingMatch.BookmakerName = matchDetailsData.BookmakerName;
+                        existingMatch.HomeWinOdds = matchDetailsData.HomeWinOdds;
+                        existingMatch.DrawWinOdds = matchDetailsData.DrawWinOdds;
+                        existingMatch.AwayWinOdds = matchDetailsData.AwayWinOdds;
+                        existingMatch.GoalsOver25Odds = matchDetailsData.GoalsOver25Odds;
+                        existingMatch.GoalsUnder25Odds = matchDetailsData.GoalsUnder25Odds;
+                        existingMatch.OriginalResponseOdds = matchDetailsData.OriginalResponseOdds;
 
                         updatedMatches++;
                     }
@@ -286,7 +301,10 @@ namespace Application.Jobs
                             IsHistory = matchDetailsData.IsHistory,
                             DataSource = matchDetailsData.DataSource,
                             FixtureId = matchDetailsData.FixtureId,
-                            Status = matchDetailsData.Status
+                            Status = matchDetailsData.Status,
+                            BookmakerId = matchDetailsData.BookmakerId,
+                            BookmakerName = matchDetailsData.BookmakerName,
+                            OriginalResponseOdds = matchDetailsData.OriginalResponseOdds
                         };
 
                         await _matchDetailsRepository.AddAsync(matchDetails);
@@ -301,6 +319,9 @@ namespace Application.Jobs
                 await _unitOfWork.SaveChangesAsync();
 
                 _logger.LogInformation($"Match details: updated count: {updatedMatches}, inserted count: {insertedMatches}");
+                _logger.LogInformation($"Match details: skipped without odds count: {skippedMatchesWithoutOdds}");
+                _logger.LogInformation($"Match details: skipped without full time result count: {skippedMatchesWithoutFullTimeResult}");
+                _logger.LogInformation($"Match details: skipped because it is cup count: {skippedMatchesIsCup}");
 
                 stopwatch.Stop();
                 TimeSpan elapsed = stopwatch.Elapsed;
@@ -314,6 +335,46 @@ namespace Application.Jobs
                 _logger.LogError(ex, "An error occurred during job execution");
 
                 throw;
+            }
+        }
+
+        private bool HasRequiredOdds(MatchDetailsData? odds)
+        {
+            return odds is not null
+                && odds.HomeWinOdds is not null
+                && odds.DrawWinOdds is not null
+                && odds.AwayWinOdds is not null
+                && odds.GoalsOver25Odds is not null
+                && odds.GoalsUnder25Odds is not null;
+        }
+
+        private async Task<LeagueData?> GetLeagueInfoAsync(MatchDetailsData matchDetailsData, TimeSpan? delay, CancellationToken ct)
+        {
+            LeagueData? leagueData;
+
+            //match is skipped if there is no league data or competition is cup
+            if (_matchLiveService is ILeagueService leagueService)
+            {
+                await ApplyDelayIfNeeded(delay, ct);
+                leagueData = await leagueService.GetLeagueDataAsync(matchDetailsData.ExternalLeagueId!.Value);
+            }
+            else
+            {
+                leagueData = new LeagueData();
+
+                leagueData.Name = matchDetailsData.LeagueName!;
+                leagueData.IsCup = matchDetailsData.IsCup ?? false;
+            }
+
+            return leagueData;
+        }
+
+        private async Task ApplyDelayIfNeeded(TimeSpan? delay, CancellationToken ct)
+        {
+            if (delay.HasValue)
+            {
+                _logger.LogInformation($"Applying delay of {delay.Value.TotalSeconds} seconds to respect rate limits");
+                await Task.Delay(delay.Value, ct);
             }
         }
     }

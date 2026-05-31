@@ -8,6 +8,7 @@ using System.Reflection.Metadata.Ecma335;
 
 namespace Application.Jobs
 {
+    [DisallowConcurrentExecution]
     public class WeatherForecastImportJob : IJob
     {
         const int MAX_SERVICE_REQUESTS_PER_EXECUTION = 2000;

@@ -42,20 +42,45 @@ namespace Infrastructure
 
             services.AddQuartz(options =>
             {
+                var dailyPipelineJobKey = new JobKey("DailyPipelineJob");
                 var matchHistoryImportJobKey = new JobKey("MatchHistoryImportJob");
                 var stadiumImportJobKey = new JobKey("StadiumImportJob");
                 var weatherHistoryImportJobKey = new JobKey("WeatherHistoryImportJob");
-                var matchLiveImportJobKey = new JobKey("MatchLiveImportJob");
+                var matchLiveImportTodayJobKey = new JobKey("MatchLiveImportJobToday");
+                var matchLiveImportYesterdayJobKey = new JobKey("MatchLiveImportJobYesterday");
                 var matchOddsImportJobKey = new JobKey("MatchOddsImportJob");
                 var weatherForecastImportJobKey = new JobKey("WeatherForecastImportJob");
 
                 //StoreDurably if I want just to run job from api endpoint without scheduler
+                options.AddJob<DailyPipelineJob>(dailyPipelineJobKey, j => j.StoreDurably());
+
                 options.AddJob<MatchHistoryImportJob>(matchHistoryImportJobKey, j => j.StoreDurably());
+
                 options.AddJob<StadiumImportJob>(stadiumImportJobKey, j => j.StoreDurably());
+
                 options.AddJob<WeatherHistoryImportJob>(weatherHistoryImportJobKey, j => j.StoreDurably());
-                options.AddJob<MatchLiveImportJob>(matchLiveImportJobKey, j => j.StoreDurably());
+
+                options.AddJob<MatchLiveImportJob>(matchLiveImportTodayJobKey, j => j
+                    .StoreDurably()
+                    .UsingJobData("DateOffsetDays", 0));
+
+                options.AddJob<MatchLiveImportJob>(matchLiveImportYesterdayJobKey, j => j
+                    .StoreDurably()
+                    .UsingJobData("DateOffsetDays", -1));
+
                 options.AddJob<MatchOddsImportJob>(matchOddsImportJobKey, j => j.StoreDurably());
+
                 options.AddJob<WeatherForecastImportJob>(weatherForecastImportJobKey, j => j.StoreDurably());
+
+                //options.AddTrigger(trigger => trigger
+                //    .ForJob(dailyPipelineJobKey)
+                //    .WithIdentity("DailyPipelineJobTrigger")
+                //    .WithCronSchedule("0 0 6 * * ?"));
+
+                options.AddTrigger(trigger => trigger
+                    .ForJob(weatherForecastImportJobKey)
+                    .WithIdentity("WeatherForecastImportJobHourlyTrigger")
+                    .WithCronSchedule("0 30 * * * ?"));
             });
 
             services.AddQuartzHostedService(opt => opt.WaitForJobsToComplete = true);

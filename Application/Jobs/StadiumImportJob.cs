@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Application.Jobs
 {
+    [DisallowConcurrentExecution]
     public class StadiumImportJob : IJob
     {
         private readonly IRepository<Stadium> _stadiumRepository;

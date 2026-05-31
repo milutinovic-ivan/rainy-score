@@ -1,6 +1,7 @@
 ﻿using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using System.Data.Common;
+using System.Text.Json;
 
 namespace Infrastructure.Persistence
 {
@@ -51,6 +52,18 @@ namespace Infrastructure.Persistence
             modelBuilder.Entity<WeatherCondition>()
                 .Property(wc => wc.WindSpeed10m)
                 .HasColumnName("wind_speed_10m");
+
+            //just for tests proposes, since sqlite doesn't support json document type
+            if (Database.ProviderName == "Microsoft.EntityFrameworkCore.Sqlite")
+            {
+                modelBuilder.Entity<MatchDetails>()
+                    .Property(x => x.OriginalResponseOdds)
+                    .HasConversion(
+                        v => v == null ? null : v.RootElement.GetRawText(),
+                        v => v == null
+                            ? null
+                            : JsonDocument.Parse(v, new JsonDocumentOptions()));
+            }
 
             //data seeding
             modelBuilder.Entity<Country>().HasData(
