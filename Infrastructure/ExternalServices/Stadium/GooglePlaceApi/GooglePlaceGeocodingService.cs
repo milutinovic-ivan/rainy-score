@@ -1,41 +1,45 @@
 ﻿using Application.Intefraces;
 using Application.Models;
-using CsvHelper;
+using Application.Models.Configuration;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Quartz.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace Infrastructure.ExternalServices.Stadium.GooglePlaceApi
 {
-    public class GooglePlaceStadiumService : IStadiumService
+    public class GooglePlaceGeocodingService : IGeocodingService
     {
-        HttpClient _httpClient;
+        private const string ServiceName = "googleplace";
 
-        const string URL = "https://places.googleapis.com/v1/places:searchText";
-        const string API_KEY = "AIzaSyA_3dslJZNTmzAxKeigy717v2lbIRqKyxo";
-        private readonly ILogger<GooglePlaceStadiumService> _logger;
+        private readonly HttpClient _httpClient;
+        private readonly ILogger<GooglePlaceGeocodingService> _logger;
+        private readonly GeocodingProviderSettings _providerSettings;
 
-
-        public GooglePlaceStadiumService(IHttpClientFactory factory, ILogger<GooglePlaceStadiumService> logger)
+        public GooglePlaceGeocodingService(IHttpClientFactory factory, 
+            ILogger<GooglePlaceGeocodingService> logger, 
+            IConfiguration configuration)
         {
             _httpClient = factory.CreateClient();
             _logger = logger;
+
+            _providerSettings = configuration
+                .GetSection($"GeocodingProviders:{ServiceName}")
+                .Get<GeocodingProviderSettings>()
+                ?? throw new Exception("Missing geocoding provider config");
         }
 
-        public async Task<StadiumData?> GetStadiumDataAsync(string teamName)
+        public async Task<Coordinates?> GetCoordinatesAsync(string query)
         {
-            using var req = new HttpRequestMessage(HttpMethod.Post, URL);
+            await ApplyDelayIfNeeded();
+
+            using var req = new HttpRequestMessage(HttpMethod.Post, _providerSettings.BaseUrl);
             // Required headers
-            req.Headers.Add("X-Goog-Api-Key", API_KEY);
+            req.Headers.Add("X-Goog-Api-Key", _providerSettings.ApiKey);
             req.Headers.Add("X-Goog-FieldMask", "places.displayName,places.location,places.types");
 
             req.Content = new StringContent(
-                JsonSerializer.Serialize(new { textQuery = $"{teamName} stadium" }),
+                JsonSerializer.Serialize(new { textQuery = query }),
                 Encoding.UTF8,
                 "application/json");
 
@@ -64,7 +68,7 @@ namespace Infrastructure.ExternalServices.Stadium.GooglePlaceApi
             return GetBestStadiumMatch(stadiumResponse);
         }
 
-        private StadiumData? GetBestStadiumMatch(StadiumResponse? stadiumResponse)
+        private Coordinates? GetBestStadiumMatch(StadiumResponse? stadiumResponse)
         {
             //no places found
             if (stadiumResponse?.Places == null || stadiumResponse.Places.Count == 0)
@@ -76,11 +80,10 @@ namespace Infrastructure.ExternalServices.Stadium.GooglePlaceApi
             var stadiumPlace = stadiumResponse.Places.FirstOrDefault(p => p.Types?.Contains("stadium") == true)
                 ?? stadiumResponse.Places.First();
 
-            if(stadiumPlace.Location != null && stadiumPlace.DisplayName != null)
+            if(stadiumPlace.Location != null)
             {
-                return new StadiumData
+                return new Coordinates
                 {
-                    Name = stadiumPlace.DisplayName.Text,
                     Latitude = stadiumPlace.Location.Latitude,
                     Longitude = stadiumPlace.Location.Longitude
                 };
@@ -88,6 +91,18 @@ namespace Infrastructure.ExternalServices.Stadium.GooglePlaceApi
             else
             {
                 return null;
+            }
+        }
+
+        private async Task ApplyDelayIfNeeded()
+        {
+            //calculate delay, if needed
+            if (_providerSettings.RequestsPerMinute.HasValue)
+            {
+               var delay = TimeSpan.FromMinutes(1.0 / _providerSettings.RequestsPerMinute.Value);
+                _logger.LogDebug($"Applying delay of {delay.TotalSeconds} seconds to respect rate limits");
+
+                await Task.Delay(delay);
             }
         }
 

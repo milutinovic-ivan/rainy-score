@@ -7,14 +7,10 @@ using Infrastructure.Persistence;
 using Infrastructure.Repositories;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Sqlite;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.Extensions.Primitives;
 using Moq;
 using Quartz;
-using System.Timers;
 
 namespace Tests.Application.Tests.Jobs
 {
@@ -74,10 +70,6 @@ namespace Tests.Application.Tests.Jobs
         {
             // Arrange
             var matchLiveService = new Mock<IMatchLiveService>();
-
-            matchLiveService
-                .Setup(x => x.ServiceName)
-                .Returns("apifootball");
 
             var runDate = DateOnly.FromDateTime(DateTime.UtcNow);
 
@@ -184,10 +176,6 @@ namespace Tests.Application.Tests.Jobs
         {
             // Arrange
             var matchLiveService = new Mock<IMatchLiveService>();
-
-            matchLiveService
-                .Setup(x => x.ServiceName)
-                .Returns("apifootball");
 
             var runDate = DateOnly.FromDateTime(DateTime.UtcNow);
 
@@ -301,10 +289,6 @@ namespace Tests.Application.Tests.Jobs
         {
             // ARRANGE
             var matchLiveService = new Mock<IMatchLiveService>();
-
-            matchLiveService
-                .Setup(x => x.ServiceName)
-                .Returns("apifootball");
 
             var runDate = DateOnly.FromDateTime(DateTime.UtcNow);
 
@@ -428,10 +412,6 @@ namespace Tests.Application.Tests.Jobs
             // ARRANGE
             var matchLiveService = new Mock<IMatchLiveService>();
 
-            matchLiveService
-                .Setup(x => x.ServiceName)
-                .Returns("apifootball");
-
             var runDate = DateOnly.FromDateTime(DateTime.UtcNow);
 
             matchLiveService
@@ -528,10 +508,6 @@ namespace Tests.Application.Tests.Jobs
         {
             // ARRANGE
             var matchLiveService = new Mock<IMatchLiveService>();
-
-            matchLiveService
-                .Setup(x => x.ServiceName)
-                .Returns("apifootball");
 
             var runDate = DateOnly.FromDateTime(DateTime.UtcNow);
 
@@ -634,10 +610,6 @@ namespace Tests.Application.Tests.Jobs
         {
             // ARRANGE
             var matchLiveService = new Mock<IMatchLiveService>();
-
-            matchLiveService
-                .Setup(x => x.ServiceName)
-                .Returns("apifootball");
 
             var runDate = DateOnly.FromDateTime(DateTime.UtcNow);
 

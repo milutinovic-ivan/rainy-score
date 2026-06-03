@@ -23,7 +23,6 @@ namespace Application.Jobs
         private readonly IRepository<MatchDetails> _matchDetailsRepository;
         private readonly IRepository<LeagueExternalMap> _leagueExternalMapRepository;
         private readonly IUnitOfWork _unitOfWork;
-        private readonly MatchLiveProviderSettings _providerSettings;
 
         public MatchLiveImportJob(IMatchLiveService matchLiveService, ILogger<MatchLiveImportJob> logger,
            IRepository<Country> countryRepository,
@@ -41,11 +40,6 @@ namespace Application.Jobs
             _matchDetailsRepository = matchDetailsRepository;
             _leagueExternalMapRepository = leagueExternalMapRepository;
             _unitOfWork = unitOfWork;
-
-            _providerSettings = configuration
-                .GetSection($"MatchLiveProviders:{_matchLiveService.ServiceName}")
-                .Get<MatchLiveProviderSettings>()
-                ?? throw new Exception("Missing match live provider config");
         }
 
         public async Task Execute(IJobExecutionContext context)
@@ -65,13 +59,6 @@ namespace Application.Jobs
                 var dateOffsetDays = context.MergedJobDataMap.GetIntValue("DateOffsetDays");
                 var runDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(dateOffsetDays));
                 _logger.LogInformation($"Importing live matches for date: {runDate}, date offset days: {dateOffsetDays}");
-
-                //calculate delay, if needed
-                TimeSpan? delay = null;
-                if (_providerSettings.RequestsPerMinute.HasValue)
-                {
-                    delay = TimeSpan.FromMinutes(1.0 / _providerSettings.RequestsPerMinute.Value);
-                }
 
                 //call service implementation to get list of match details
                 var matchDetailsDataList = await _matchLiveService.GetMatchDetailsListAsync(runDate);
@@ -110,11 +97,11 @@ namespace Application.Jobs
                     }
 
                     //get league info, if it is cup skip match
-                    LeagueData? leagueData = await GetLeagueInfoAsync(matchDetailsData, delay, ct);
+                    LeagueData? leagueData = await GetLeagueInfoAsync(matchDetailsData);
                     if(leagueData is null || leagueData.IsCup)
                     {
                         skippedMatchesIsCup++;
-                        _logger.LogInformation($"Match skipped... null or it is cup not league, LeagueName: {leagueData?.Name} ; ExternalLeagueId: {matchDetailsData.ExternalLeagueId}");
+                        _logger.LogWarning($"Match skipped... league is null or it is cup not league, LeagueName: {leagueData?.Name} ; ExternalLeagueId: {matchDetailsData.ExternalLeagueId}");
 
                         continue;
                     }
@@ -138,7 +125,6 @@ namespace Application.Jobs
                     }
 
                     //get match odds
-                    await ApplyDelayIfNeeded(delay, ct);
                     var odds = await _matchLiveService.GetMatchOddsAsync(matchDetailsData.FixtureId.Value);
 
                     if (!HasRequiredOdds(odds))
@@ -348,14 +334,13 @@ namespace Application.Jobs
                 && odds.GoalsUnder25Odds is not null;
         }
 
-        private async Task<LeagueData?> GetLeagueInfoAsync(MatchDetailsData matchDetailsData, TimeSpan? delay, CancellationToken ct)
+        private async Task<LeagueData?> GetLeagueInfoAsync(MatchDetailsData matchDetailsData)
         {
             LeagueData? leagueData;
 
             //match is skipped if there is no league data or competition is cup
             if (_matchLiveService is ILeagueService leagueService)
             {
-                await ApplyDelayIfNeeded(delay, ct);
                 leagueData = await leagueService.GetLeagueDataAsync(matchDetailsData.ExternalLeagueId!.Value);
             }
             else
@@ -367,15 +352,6 @@ namespace Application.Jobs
             }
 
             return leagueData;
-        }
-
-        private async Task ApplyDelayIfNeeded(TimeSpan? delay, CancellationToken ct)
-        {
-            if (delay.HasValue)
-            {
-                _logger.LogInformation($"Applying delay of {delay.Value.TotalSeconds} seconds to respect rate limits");
-                await Task.Delay(delay.Value, ct);
-            }
         }
     }
 }

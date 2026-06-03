@@ -32,6 +32,9 @@ namespace Application.Jobs
         {
             _logger.LogInformation("Job started..");
 
+            int stadiumNotFoundCount = 0;
+            int stadiumAddedCount = 0;
+
             var allTeams = await _teamRepository.GetAllAsync();
 
             foreach (Team team in allTeams)
@@ -41,35 +44,41 @@ namespace Application.Jobs
                 {
                     var stadiumData = await _stadiumService.GetStadiumDataAsync(team.Name);
 
-                    if(stadiumData != null)
+                    if(stadiumData?.Latitude == null || stadiumData.Longitude == null)
                     {
-                        Stadium stadium = new Stadium()
-                        {
-                            Name = stadiumData.Name ?? string.Empty,
-                            Latitude = stadiumData.Latitude.HasValue ? Math.Round(stadiumData.Latitude.Value, 5) : null,
-                            Longitude = stadiumData.Longitude.HasValue ? Math.Round(stadiumData.Longitude.Value, 5) : null,
-                        };
+                        _logger.LogWarning($"No coordinates for stadium: {stadiumData?.Name}, team: {team.Name}");
+                        stadiumNotFoundCount++;
 
-                        //add stadium
-                        await _stadiumRepository.AddAsync(stadium);
-
-                        //add reference to team
-                        team.Stadium = stadium;
-                        _teamRepository.Update(team);
-
-                        _logger.LogInformation($"added stadium: {stadium.Name}, latitude: {stadium.Latitude}, longitude: {stadium.Longitude} " +
-                            $"for team: {team.Name}");
-                    }
-                    else
-                    {
-                        _logger.LogWarning($"no stadium data for team: {team.Name}");
+                        continue;
                     }
 
-                    await Task.Delay(TimeSpan.FromMilliseconds(200));
+                    Stadium stadium = new Stadium()
+                    {
+                        Name = stadiumData.Name ?? string.Empty,
+                        City = stadiumData.City,
+                        Address = stadiumData.Address,
+                        TerrainType = stadiumData.TerrainType,
+                        Latitude = Math.Round(stadiumData.Latitude.Value, 5),
+                        Longitude = Math.Round(stadiumData.Longitude.Value, 5)
+                    };
+
+                    //add stadium
+                    await _stadiumRepository.AddAsync(stadium);
+
+                    //add reference to team
+                    team.Stadium = stadium;
+                    _teamRepository.Update(team);
+
+                    _logger.LogInformation($"Added stadium: {stadium.Name}, latitude: {stadium.Latitude}, longitude: {stadium.Longitude} " +
+                        $"for team: {team.Name}");
+
+                    stadiumAddedCount++;
                 }
             }
 
             await _unitOfWork.SaveChangesAsync();
+
+            _logger.LogInformation($"Stadiums added count: {stadiumAddedCount} Stadiums not found count: {stadiumNotFoundCount}");
 
             _logger.LogInformation("Job finished..");
         }

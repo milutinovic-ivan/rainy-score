@@ -17,7 +17,9 @@ namespace Infrastructure.Persistence
 
             // build dbcontext options
             var optionsBuilder = new DbContextOptionsBuilder<ScoreDbContext>();
-            optionsBuilder.UseNpgsql(config.GetConnectionString("DefaultConnection"));
+            optionsBuilder
+                .UseNpgsql(config.GetConnectionString("DefaultConnection"))
+                .UseSnakeCaseNamingConvention();
 
             // return dbcontext
             return new ScoreDbContext(optionsBuilder.Options);

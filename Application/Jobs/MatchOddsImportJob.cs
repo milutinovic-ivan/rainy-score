@@ -1,14 +1,10 @@
 ﻿using Application.Intefraces;
-using Application.Models;
-using Application.Models.Configuration;
 using Domain.Entities;
 using Domain.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Quartz;
 using System.Diagnostics;
-using System.Runtime;
-using System.Runtime.Intrinsics.Arm;
 
 namespace Application.Jobs
 {
@@ -19,7 +15,6 @@ namespace Application.Jobs
         private readonly ILogger<MatchOddsImportJob> _logger;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IRepository<MatchDetails> _matchDetailsRepository;
-        private readonly MatchLiveProviderSettings _providerSettings;
 
         public MatchOddsImportJob(IMatchLiveService matchLiveService, 
            ILogger<MatchOddsImportJob> logger,
@@ -31,11 +26,6 @@ namespace Application.Jobs
             _logger = logger;
             _unitOfWork = unitOfWork;
             _matchDetailsRepository = matchDetailsRepository;
-
-            _providerSettings = configuration
-                .GetSection($"MatchLiveProviders:{_matchLiveService.ServiceName}")
-                .Get<MatchLiveProviderSettings>()
-                ?? throw new Exception("Missing match live provider config");
         }
 
         public async Task Execute(IJobExecutionContext context)
@@ -58,14 +48,6 @@ namespace Application.Jobs
                 var nowUtc = DateTime.UtcNow;
                 var runDate = DateOnly.FromDateTime(nowUtc);
 
-
-                //calculate delay, if needed
-                TimeSpan? delay = null;
-                if (_providerSettings.RequestsPerMinute.HasValue)
-                {
-                    delay = TimeSpan.FromMinutes(1.0 / _providerSettings.RequestsPerMinute.Value);
-                }
-
                 var runDateMatchDetailsList = await _matchDetailsRepository.GetAllAsync(md => md.Where(m => m.MatchDate == runDate));
 
                 //call GetMatchOddsAsync implementation for every match
@@ -78,12 +60,6 @@ namespace Application.Jobs
                     }
 
                     var odds = await _matchLiveService.GetMatchOddsAsync(matchDetails.FixtureId.Value);
-
-                    //apply delay, if needed
-                    if(delay.HasValue)
-                    {
-                        await Task.Delay(delay.Value, ct);
-                    }
 
                     //update match details with odds, should have all odds to update match details
                     if (odds is not null &&

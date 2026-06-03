@@ -27,29 +27,36 @@ namespace Infrastructure.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("name");
 
                     b.Property<string>("ShortCode")
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("short_code");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_countries");
 
                     b.HasIndex("Name")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasDatabaseName("ix_countries_name");
 
                     b.HasIndex("ShortCode")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasDatabaseName("ix_countries_short_code");
 
-                    b.ToTable("Countries");
+                    b.ToTable("countries", (string)null);
 
                     b.HasData(
                         new
@@ -135,31 +142,39 @@ namespace Infrastructure.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int>("CountryId")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("country_id");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
 
                     b.Property<bool>("IsCup")
-                        .HasColumnType("boolean");
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_cup");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("name");
 
                     b.Property<string>("ShortCode")
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("short_code");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_leagues");
 
-                    b.HasIndex("CountryId");
+                    b.HasIndex("CountryId")
+                        .HasDatabaseName("ix_leagues_country_id");
 
-                    b.ToTable("Leagues");
+                    b.ToTable("leagues", (string)null);
 
                     b.HasData(
                         new
@@ -366,32 +381,40 @@ namespace Infrastructure.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
 
                     b.Property<string>("DataSource")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("data_source");
 
                     b.Property<int>("ExternalLeagueId")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("external_league_id");
 
                     b.Property<int>("LeagueId")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("league_id");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_league_external_maps");
 
                     b.HasIndex("ExternalLeagueId", "DataSource")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasDatabaseName("ix_league_external_maps_external_league_id_data_source");
 
                     b.HasIndex("LeagueId", "DataSource")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasDatabaseName("ix_league_external_maps_league_id_data_source");
 
-                    b.ToTable("LeagueExternalMaps");
+                    b.ToTable("league_external_maps", (string)null);
 
                     b.HasData(
                         new
@@ -576,42 +599,54 @@ namespace Infrastructure.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int>("AwayTeamId")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("away_team_id");
 
                     b.Property<decimal?>("AwayWinOdds")
-                        .HasColumnType("numeric");
+                        .HasColumnType("numeric")
+                        .HasColumnName("away_win_odds");
 
                     b.Property<int?>("BookmakerId")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("bookmaker_id");
 
                     b.Property<string>("BookmakerName")
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("bookmaker_name");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
 
                     b.Property<string>("DataSource")
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("data_source");
 
                     b.Property<decimal?>("DrawWinOdds")
-                        .HasColumnType("numeric");
+                        .HasColumnType("numeric")
+                        .HasColumnName("draw_win_odds");
 
                     b.Property<int?>("FixtureId")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("fixture_id");
 
                     b.Property<int?>("FullTimeAwayGoals")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("full_time_away_goals");
 
                     b.Property<int?>("FullTimeHomeGoals")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("full_time_home_goals");
 
                     b.Property<char?>("FullTimeWiner")
-                        .HasColumnType("character(1)");
+                        .HasColumnType("character(1)")
+                        .HasColumnName("full_time_winer");
 
                     b.Property<decimal?>("GoalsOver25Odds")
                         .HasColumnType("numeric")
@@ -622,170 +657,226 @@ namespace Infrastructure.Migrations
                         .HasColumnName("goals_under_2_5_odds");
 
                     b.Property<int?>("HalfTimeAwayGoals")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("half_time_away_goals");
 
                     b.Property<int?>("HalfTimeHomeGoals")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("half_time_home_goals");
 
                     b.Property<char?>("HalfTimeWiner")
-                        .HasColumnType("character(1)");
+                        .HasColumnType("character(1)")
+                        .HasColumnName("half_time_winer");
 
                     b.Property<int>("HomeTeamId")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("home_team_id");
 
                     b.Property<decimal?>("HomeWinOdds")
-                        .HasColumnType("numeric");
+                        .HasColumnType("numeric")
+                        .HasColumnName("home_win_odds");
 
                     b.Property<bool>("IsHistory")
-                        .HasColumnType("boolean");
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_history");
 
                     b.Property<int>("LeagueId")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("league_id");
 
                     b.Property<DateOnly>("MatchDate")
-                        .HasColumnType("date");
+                        .HasColumnType("date")
+                        .HasColumnName("match_date");
 
                     b.Property<TimeOnly>("MatchTime")
-                        .HasColumnType("time without time zone");
+                        .HasColumnType("time without time zone")
+                        .HasColumnName("match_time");
 
                     b.Property<JsonDocument>("OriginalResponseOdds")
-                        .HasColumnType("jsonb");
+                        .HasColumnType("jsonb")
+                        .HasColumnName("original_response_odds");
 
                     b.Property<int>("Season")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("season");
 
                     b.Property<string>("Status")
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("status");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_match_details");
 
-                    b.HasIndex("AwayTeamId");
+                    b.HasIndex("AwayTeamId")
+                        .HasDatabaseName("ix_match_details_away_team_id");
 
-                    b.HasIndex("HomeTeamId");
+                    b.HasIndex("HomeTeamId")
+                        .HasDatabaseName("ix_match_details_home_team_id");
 
-                    b.HasIndex("LeagueId");
+                    b.HasIndex("LeagueId")
+                        .HasDatabaseName("ix_match_details_league_id");
 
                     b.HasIndex("DataSource", "FixtureId")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasDatabaseName("ix_match_details_data_source_fixture_id");
 
-                    b.ToTable("MatchDetails");
+                    b.ToTable("match_details", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.Stadium", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("Address")
+                        .HasColumnType("text")
+                        .HasColumnName("address");
+
+                    b.Property<string>("City")
+                        .HasColumnType("text")
+                        .HasColumnName("city");
+
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
 
                     b.Property<decimal?>("Latitude")
-                        .HasColumnType("numeric");
+                        .HasColumnType("numeric")
+                        .HasColumnName("latitude");
 
                     b.Property<decimal?>("Longitude")
-                        .HasColumnType("numeric");
+                        .HasColumnType("numeric")
+                        .HasColumnName("longitude");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("name");
 
-                    b.HasKey("Id");
+                    b.Property<string>("TerrainType")
+                        .HasColumnType("text")
+                        .HasColumnName("terrain_type");
 
-                    b.ToTable("Stadiums");
+                    b.HasKey("Id")
+                        .HasName("pk_stadiums");
+
+                    b.ToTable("stadiums", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.Team", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("name");
 
                     b.Property<string>("ShortCode")
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("short_code");
 
                     b.Property<int?>("StadiumId")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("stadium_id");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_teams");
 
-                    b.HasIndex("StadiumId");
+                    b.HasIndex("StadiumId")
+                        .HasDatabaseName("ix_teams_stadium_id");
 
-                    b.ToTable("Teams");
+                    b.ToTable("teams", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.WeatherCondition", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int>("CloudCover")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("cloud_cover");
 
                     b.Property<int>("CloudCoverLow")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("cloud_cover_low");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
 
                     b.Property<decimal>("DewPoint2m")
                         .HasColumnType("numeric")
                         .HasColumnName("dew_point_2m");
 
                     b.Property<decimal>("Latitude")
-                        .HasColumnType("numeric");
+                        .HasColumnType("numeric")
+                        .HasColumnName("latitude");
 
                     b.Property<decimal>("Longitude")
-                        .HasColumnType("numeric");
+                        .HasColumnType("numeric")
+                        .HasColumnName("longitude");
 
                     b.Property<int>("MatchDetailsId")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("match_details_id");
 
                     b.Property<string>("OriginalResponse")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("original_response");
 
                     b.Property<decimal>("Precipitation")
-                        .HasColumnType("numeric");
+                        .HasColumnType("numeric")
+                        .HasColumnName("precipitation");
 
                     b.Property<decimal>("SunshineDuration")
-                        .HasColumnType("numeric");
+                        .HasColumnType("numeric")
+                        .HasColumnName("sunshine_duration");
 
                     b.Property<decimal>("Temperature2m")
                         .HasColumnType("numeric")
                         .HasColumnName("temperature_2m");
 
                     b.Property<int>("WeatherCode")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("weather_code");
 
                     b.Property<string>("WeatherServiceCode")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("weather_service_code");
 
                     b.Property<decimal>("WindSpeed10m")
                         .HasColumnType("numeric")
                         .HasColumnName("wind_speed_10m");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_weather_conditions");
 
                     b.HasIndex("MatchDetailsId")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasDatabaseName("ix_weather_conditions_match_details_id");
 
-                    b.ToTable("WeatherConditions");
+                    b.ToTable("weather_conditions", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.League", b =>
@@ -794,7 +885,8 @@ namespace Infrastructure.Migrations
                         .WithMany("Leagues")
                         .HasForeignKey("CountryId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("fk_leagues_countries_country_id");
 
                     b.Navigation("Country");
                 });
@@ -805,7 +897,8 @@ namespace Infrastructure.Migrations
                         .WithMany("LeagueExternalMaps")
                         .HasForeignKey("LeagueId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("fk_league_external_maps_leagues_league_id");
 
                     b.Navigation("League");
                 });
@@ -816,19 +909,22 @@ namespace Infrastructure.Migrations
                         .WithMany("AwayMatches")
                         .HasForeignKey("AwayTeamId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("fk_match_details_teams_away_team_id");
 
                     b.HasOne("Domain.Entities.Team", "HomeTeam")
                         .WithMany("HomeMatches")
                         .HasForeignKey("HomeTeamId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("fk_match_details_teams_home_team_id");
 
                     b.HasOne("Domain.Entities.League", "League")
                         .WithMany("MatchDetails")
                         .HasForeignKey("LeagueId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("fk_match_details_leagues_league_id");
 
                     b.Navigation("AwayTeam");
 
@@ -841,7 +937,8 @@ namespace Infrastructure.Migrations
                 {
                     b.HasOne("Domain.Entities.Stadium", "Stadium")
                         .WithMany("Teams")
-                        .HasForeignKey("StadiumId");
+                        .HasForeignKey("StadiumId")
+                        .HasConstraintName("fk_teams_stadiums_stadium_id");
 
                     b.Navigation("Stadium");
                 });
@@ -852,7 +949,8 @@ namespace Infrastructure.Migrations
                         .WithOne("WeatherCondition")
                         .HasForeignKey("Domain.Entities.WeatherCondition", "MatchDetailsId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("fk_weather_conditions_match_details_match_details_id");
 
                     b.Navigation("MatchDetails");
                 });

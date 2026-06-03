@@ -33,12 +33,13 @@ namespace Infrastructure
 
             services.AddScoped<IWeatherHistoryService, OpenMeteoWeatherHistoryService>();
 
-            services.AddScoped<IStadiumService, GooglePlaceStadiumService>();
+            services.AddScoped<IGeocodingService, GooglePlaceGeocodingService>();
 
             services.AddScoped<IWeatherForecastService, OpenMeteoWeatherForecastService>();
 
             //ApiFootball injection
             services.AddScoped<IMatchLiveService, ApiFootballMatchLiveService>();
+            services.AddScoped<IStadiumInfoService, ApiFootballMatchLiveService>();
 
             services.AddQuartz(options =>
             {

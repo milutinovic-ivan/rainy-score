@@ -10,8 +10,10 @@ using System.Xml.Linq;
 
 namespace Infrastructure.ExternalServices.MatchLive.ApiFootball
 {
-    public class ApiFootballMatchLiveService : IMatchLiveService, ILeagueService
+    public class ApiFootballMatchLiveService : IMatchLiveService, ILeagueService, IStadiumInfoService
     {
+        private const string ServiceName = "apifootball";
+
         private readonly HttpClient _httpClient;
         private readonly ILogger<ApiFootballMatchLiveService> _logger;
         private readonly MatchLiveProviderSettings _providerSettings;
@@ -29,10 +31,10 @@ namespace Infrastructure.ExternalServices.MatchLive.ApiFootball
                 ?? throw new Exception("Missing match live provider config");
         }
 
-        public string ServiceName => "apifootball";
-
         public async Task<List<MatchDetailsData>> GetMatchDetailsListAsync(DateOnly matchDate)
         {
+            await ApplyDelayIfNeeded();
+
             var jsonString = await GetFixturesJsonAsync(matchDate);
             var matchDetailsDataList = ParseFixtures(jsonString);
 
@@ -41,6 +43,8 @@ namespace Infrastructure.ExternalServices.MatchLive.ApiFootball
 
         public async Task<MatchDetailsData?> GetMatchOddsAsync(int fixtureId)
         {
+            await ApplyDelayIfNeeded();
+
             var jsonString = await GetOddsJsonAsync(fixtureId);
             var matchDetailsData = ParseOdds(jsonString);
 
@@ -49,10 +53,22 @@ namespace Infrastructure.ExternalServices.MatchLive.ApiFootball
 
         public async Task<LeagueData?> GetLeagueDataAsync(int leagueId)
         {
+            await ApplyDelayIfNeeded();
+
             var jsonString = await GetLeagueJsonAsync(leagueId);
             var leagueData = ParseLeague(jsonString);
 
             return leagueData;
+        }
+
+        public async Task<StadiumInfo?> GetStadiumInfoAsync(string teamName)
+        {
+            await ApplyDelayIfNeeded();
+
+            var jsonString = await GetStadiumInfoJsonAsync(teamName);
+            var StadiumInfo = jsonString != null ? ParseStadiumInfo(jsonString) : null;
+
+            return StadiumInfo;
         }
 
         private async Task<string?> GetFixturesJsonAsync(DateOnly matchDate)
@@ -128,7 +144,7 @@ namespace Infrastructure.ExternalServices.MatchLive.ApiFootball
                 matchDetails.AwayTeam = teamsEl.GetProperty("away").GetProperty("name").GetString()?.Trim() ?? string.Empty;
 
                 //score
-                if(matchDetails.Status == "FT")
+                if (matchDetails.Status == "FT")
                 {
                     var fullTimeEl = item.GetProperty("score").GetProperty("fulltime");
 
@@ -137,7 +153,7 @@ namespace Infrastructure.ExternalServices.MatchLive.ApiFootball
                     matchDetails.FullTimeAwayGoals = fullTimeEl.GetProperty("away").ValueKind == JsonValueKind.Number
                         ? fullTimeEl.GetProperty("away").GetInt32() : null;
 
-                    if(matchDetails.FullTimeHomeGoals.HasValue && matchDetails.FullTimeAwayGoals.HasValue)
+                    if (matchDetails.FullTimeHomeGoals.HasValue && matchDetails.FullTimeAwayGoals.HasValue)
                     {
                         matchDetails.FullTimeWiner = matchDetails.FullTimeHomeGoals > matchDetails.FullTimeAwayGoals ? 'H'
                             : matchDetails.FullTimeAwayGoals > matchDetails.FullTimeHomeGoals ? 'A' : 'D';
@@ -154,7 +170,7 @@ namespace Infrastructure.ExternalServices.MatchLive.ApiFootball
                     matchDetails.HalfTimeAwayGoals = halfTimeEl.GetProperty("away").ValueKind == JsonValueKind.Number
                         ? halfTimeEl.GetProperty("away").GetInt32() : null;
 
-                    if(matchDetails.HalfTimeHomeGoals.HasValue && matchDetails.HalfTimeAwayGoals.HasValue)
+                    if (matchDetails.HalfTimeHomeGoals.HasValue && matchDetails.HalfTimeAwayGoals.HasValue)
                     {
                         matchDetails.HalfTimeWiner = matchDetails.HalfTimeHomeGoals > matchDetails.HalfTimeAwayGoals ? 'H'
                             : matchDetails.HalfTimeAwayGoals > matchDetails.HalfTimeHomeGoals ? 'A' : 'D';
@@ -207,8 +223,8 @@ namespace Infrastructure.ExternalServices.MatchLive.ApiFootball
 
             using var rootDoc = JsonDocument.Parse(jsonString);
 
-            if (!rootDoc.RootElement.TryGetProperty("response", out var responseEl) 
-                ||responseEl.ValueKind != JsonValueKind.Array 
+            if (!rootDoc.RootElement.TryGetProperty("response", out var responseEl)
+                || responseEl.ValueKind != JsonValueKind.Array
                 || responseEl.GetArrayLength() == 0)
             {
                 return null;
@@ -356,6 +372,84 @@ namespace Infrastructure.ExternalServices.MatchLive.ApiFootball
 
 
             return leagueData;
+        }
+
+        private async Task<string?> GetStadiumInfoJsonAsync(string teamName)
+        {
+            var url = $"{_providerSettings.BaseUrl}/teams?name={teamName}";
+
+            using var request = new HttpRequestMessage(HttpMethod.Get, url);
+            request.Headers.Add("x-apisports-key", _providerSettings.ApiKey);
+
+            var response = await _httpClient.SendAsync(request);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                _logger.LogError(
+                    "API-Football error. Url: {Url}, Status: {Status}, Body: {Body}",
+                    url, response.StatusCode, error);
+
+                return null;
+            }
+
+            var jsonString = await response.Content.ReadAsStringAsync();
+            return jsonString;
+        }
+
+        private StadiumInfo? ParseStadiumInfo(string jsonString)
+        {
+            using var document = JsonDocument.Parse(jsonString);
+
+            if (!document.RootElement.TryGetProperty("response", out var response))
+            {
+                return null;
+            }
+
+            if (response.GetArrayLength() == 0)
+            {
+                return null;
+            }
+
+            var item = response[0];
+
+            var team = item.GetProperty("team");
+            var venue = item.GetProperty("venue");
+
+            return new StadiumInfo
+            {
+                TeamName = team.TryGetProperty("name", out var teamName)
+                    ? teamName.GetString()
+                    : null,
+
+                StadiumName = venue.TryGetProperty("name", out var stadiumName)
+                    ? stadiumName.GetString()
+                    : null,
+
+                City = venue.TryGetProperty("city", out var city)
+                    ? city.GetString()
+                    : null,
+
+                Address = venue.TryGetProperty("address", out var address)
+                    ? address.GetString()
+                    : null,
+
+                TerrainType = venue.TryGetProperty("surface", out var surface)
+                    ? surface.GetString()
+                    : null
+            };
+        }
+
+        private async Task ApplyDelayIfNeeded()
+        {
+            //calculate delay, if needed
+            if (_providerSettings.RequestsPerMinute.HasValue)
+            {
+                var delay = TimeSpan.FromMinutes(1.0 / _providerSettings.RequestsPerMinute.Value);
+                _logger.LogDebug($"Applying delay of {delay.TotalSeconds} seconds to respect rate limits");
+
+                await Task.Delay(delay);
+            }
         }
     }
 }
