@@ -64,14 +64,14 @@ namespace Application.Jobs
                 var matchDetailsDataList = await _matchLiveService.GetMatchDetailsListAsync(runDate);
 
                 //get all existing data from db
-                var allTeams = await _teamRepository.GetAllAsync();
+                var allTeams = await _teamRepository.GetAllAsync(t => t.Include(t => t.Country));
                 var allContries = await _countryRepository.GetAllAsync();
                 var allLeagues = await _leagueRepository.GetAllAsync(l => l.Include(l => l.Country));
                 var allleagueExternalMaps = await _leagueExternalMapRepository.GetAllAsync(lem => lem.Include(lem => lem.League));
                 var runDateMatchDetailsList = await _matchDetailsRepository.GetAllAsync(md => md.Where(m => m.MatchDate == runDate));
 
                 //put results in dicts to not query db every time
-                var teamsCache = allTeams.ToDictionary(t => t.Name.Trim(), t => t, StringComparer.OrdinalIgnoreCase);
+                var teamsCache = allTeams.ToDictionary(t => (t.Name.Trim(), t.Country!.Name.Trim()), t => t);
                 var countryCache = allContries.ToDictionary(c => c.Name.Trim(), c => c, StringComparer.OrdinalIgnoreCase);
                 var leagueCache = allLeagues.ToDictionary(l => (l.Name.Trim(), l.Country.Name.Trim()), l => l);
                 var leagueExternalMapCache = allleagueExternalMaps.ToDictionary(l => (l.DataSource, l.ExternalLeagueId), l => l);
@@ -82,6 +82,7 @@ namespace Application.Jobs
                 int skippedMatchesWithoutOdds = 0;
                 int skippedMatchesWithoutFullTimeResult = 0;
                 int skippedMatchesIsCup = 0;
+                int teamsAdded = 0;
 
                 foreach (var matchDetailsData in matchDetailsDataList)
                 {
@@ -206,39 +207,43 @@ namespace Application.Jobs
 
 
                     //add home team just if already not exists
-                    var homeTeamName = matchDetailsData.HomeTeam.Trim();
-                    if (!teamsCache.TryGetValue(homeTeamName, out var homeTeam))
+                    var homeTeamKey = (matchDetailsData.HomeTeam.Trim(), country.Name);
+                    if (!teamsCache.TryGetValue(homeTeamKey, out var homeTeam))
                     {
                         homeTeam = new Team
                         {
-                            Name = homeTeamName,
+                            Name = matchDetailsData.HomeTeam.Trim(),
+                            Country = country,
                             StadiumId = null
                         };
 
                         await _teamRepository.AddAsync(homeTeam);
 
                         //add new item in dict
-                        teamsCache.Add(homeTeam.Name, homeTeam);
+                        teamsCache.Add(homeTeamKey, homeTeam);
 
-                        _logger.LogInformation($"Team added... Name: {homeTeam.Name}");
+                        _logger.LogDebug($"Team added... Name: {homeTeam.Name}");
+                        teamsAdded++;
                     }
 
                     //add away team just if already not exists
-                    var awayTeamName = matchDetailsData.AwayTeam.Trim();
-                    if (!teamsCache.TryGetValue(awayTeamName, out var awayTeam))
+                    var awayTeamKey = (matchDetailsData.AwayTeam.Trim(), country.Name);
+                    if (!teamsCache.TryGetValue(awayTeamKey, out var awayTeam))
                     {
                         awayTeam = new Team
                         {
-                            Name = awayTeamName,
+                            Name = matchDetailsData.AwayTeam.Trim(),
+                            Country = country,
                             StadiumId = null
                         };
 
                         await _teamRepository.AddAsync(awayTeam);
 
                         //add new item in dict
-                        teamsCache.Add(awayTeam.Name, awayTeam);
+                        teamsCache.Add(awayTeamKey, awayTeam);
 
-                        _logger.LogInformation($"Team added... Name: {awayTeam.Name}");
+                        _logger.LogDebug($"Team added... Name: {awayTeam.Name}");
+                        teamsAdded++;
                     }
 
                     //MatchDetails
@@ -304,6 +309,7 @@ namespace Application.Jobs
                 //call save changes anyway
                 await _unitOfWork.SaveChangesAsync();
 
+                _logger.LogInformation($"Teams added count: {teamsAdded}");
                 _logger.LogInformation($"Match details: updated count: {updatedMatches}, inserted count: {insertedMatches}");
                 _logger.LogInformation($"Match details: skipped without odds count: {skippedMatchesWithoutOdds}");
                 _logger.LogInformation($"Match details: skipped without full time result count: {skippedMatchesWithoutFullTimeResult}");

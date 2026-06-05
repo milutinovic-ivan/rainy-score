@@ -696,5 +696,128 @@ namespace Tests.Application.Tests.Jobs
                 Times.Never);
         }
 
+        [Fact]
+        public async Task Should_Insert_New_Teams_And_Country_Because_Same_Team_Name_Diff_Country()
+        {
+            // Arrange
+            var matchLiveService = new Mock<IMatchLiveService>();
+
+            var runDate = DateOnly.FromDateTime(DateTime.UtcNow);
+
+            var team1 = new Team
+            {
+                Name = "Liverpool",
+                CountryId = 1
+            };
+
+            var team2 = new Team
+            {
+                Name = "Arsenal",
+                CountryId = 1
+            };
+
+            await _teamRepository.AddAsync(team1);
+            await _teamRepository.AddAsync(team2);
+            await _unitOfWork.SaveChangesAsync();
+
+            matchLiveService
+                .Setup(x => x.GetMatchDetailsListAsync(It.IsAny<DateOnly>()))
+                .ReturnsAsync(new List<MatchDetailsData>
+                {
+                    new()
+                    {
+                        FixtureId = 1001,
+                        DataSource = "apifootball",
+                        ExternalLeagueId = 39,
+
+                        //different country
+                        Country = "Bulgaria",
+                        LeagueName = "Premier League",
+
+                        HomeTeam = "Liverpool",
+                        AwayTeam = "Arsenal",
+
+                        MatchDate = runDate,
+                        MatchTime = new TimeOnly(18, 30),
+
+                        Status = "NS",
+                        IsCup = false
+                    }
+                });
+
+            matchLiveService
+                .Setup(x => x.GetMatchOddsAsync(1001))
+                .ReturnsAsync(new MatchDetailsData
+                {
+                    BookmakerId = 1,
+                    BookmakerName = "Bet365",
+
+                    HomeWinOdds = 1.90m,
+                    DrawWinOdds = 3.50m,
+                    AwayWinOdds = 4.20m,
+
+                    GoalsOver25Odds = 1.85m,
+                    GoalsUnder25Odds = 1.95m
+                });
+
+            var job = new MatchLiveImportJob(
+                matchLiveService.Object,
+                _logger,
+                _countryRepository,
+                _leagueRepository,
+                _teamRepository,
+                _matchDetailsRepository,
+                _leagueExternalMapRepository,
+                _unitOfWork,
+                _configuration);
+
+            var context = new Mock<IJobExecutionContext>();
+
+            context.Setup(x => x.CancellationToken)
+                .Returns(CancellationToken.None);
+
+            context.Setup(x => x.MergedJobDataMap)
+                .Returns(new JobDataMap
+                {
+                    { "DateOffsetDays", 0 }
+                });
+
+            // Act
+            await job.Execute(context.Object);
+
+            // Assert
+            var countries = await _countryRepository.GetAllAsync();
+            var leagues = await _leagueRepository.GetAllAsync();
+            var teams = await _teamRepository.GetAllAsync();
+            var maps = await _leagueExternalMapRepository.GetAllAsync();
+
+            var matchDetails = await _matchDetailsRepository.SingleOrDefaultAsync(m => m.Where(m => m.FixtureId == 1001));
+
+            Assert.Equal(12, countries.Count());
+            Assert.Equal(22, leagues.Count());
+            Assert.Equal(4, teams.Count());
+            Assert.Equal(22, maps.Count());
+
+            Assert.NotNull(matchDetails);
+            Assert.Equal(1001, matchDetails.FixtureId);
+            Assert.Equal("apifootball", matchDetails.DataSource);
+            Assert.Equal(1, matchDetails.LeagueId);
+
+            Assert.Equal(1.90m, matchDetails.HomeWinOdds);
+            Assert.Equal(3.50m, matchDetails.DrawWinOdds);
+            Assert.Equal(4.20m, matchDetails.AwayWinOdds);
+
+            Assert.Equal(1.85m, matchDetails.GoalsOver25Odds);
+            Assert.Equal(1.95m, matchDetails.GoalsUnder25Odds);
+
+            matchLiveService.Verify(
+                x => x.GetMatchDetailsListAsync(It.IsAny<DateOnly>()),
+                Times.Once);
+
+            matchLiveService.Verify(
+                x => x.GetMatchOddsAsync(1001),
+                Times.Once);
+        }
+
     }
 }

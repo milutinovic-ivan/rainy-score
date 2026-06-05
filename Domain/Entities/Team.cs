@@ -6,6 +6,8 @@ namespace Domain.Entities
     {
         public string Name { get; set; } = string.Empty;
         public string? ShortCode { get; set; }
+        public int CountryId { get; set; }
+        public Country? Country { get; set; }
         public int? StadiumId { get; set; }
         public Stadium? Stadium { get; set; }
 

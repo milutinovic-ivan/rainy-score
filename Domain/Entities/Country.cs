@@ -5,5 +5,6 @@
         public string Name { get; set; }
         public string? ShortCode { get; set; }
         public ICollection<League> Leagues { get; set; } = new List<League>();
+        public ICollection<Team> Teams { get; set; } = new List<Team>();
     }
 }

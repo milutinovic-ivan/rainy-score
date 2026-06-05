@@ -73,8 +73,9 @@ namespace Tests.Application.Tests.Jobs
                 });
 
             //add a team to the database to link the stadium to
-            var team = new Team { Name = "Test Team" };
+            var team = new Team { Name = "Test Team", CountryId = 1 };
             await _teamRepository.AddAsync(team);
+
             await _unitOfWork.SaveChangesAsync();
 
             var job = new StadiumImportJob(_stadiumRepository, _teamRepository, stadiumServiceMock.Object, _logger, _unitOfWork);
@@ -119,7 +120,7 @@ namespace Tests.Application.Tests.Jobs
                 });
 
             //add a team to the database to link the stadium to
-            var team = new Team { Name = "Test Team" };
+            var team = new Team { Name = "Test Team", CountryId = 1 };
             await _teamRepository.AddAsync(team);
             await _unitOfWork.SaveChangesAsync();
 
