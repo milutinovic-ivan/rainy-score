@@ -1,11 +1,6 @@
 ﻿using Application.Intefraces;
 using Application.Models;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Application.Services
 {
@@ -24,40 +19,40 @@ namespace Application.Services
             _logger = logger;
         }
 
-        public async Task<StadiumData?> GetStadiumDataAsync(string teamName)
+        public async Task<StadiumData?> GetStadiumDataAsync(string teamName, string countryName)
         {
-            var stadiumInfo = await _stadiumInfoService.GetStadiumInfoAsync(teamName);
+            var stadiumInfo = await _stadiumInfoService.GetStadiumInfoAsync(teamName, countryName);
 
             string query;
 
             if (stadiumInfo == null)
             {
-                query = $"{teamName} stadium";
-                _logger.LogDebug($"Geocoding query created pattern: TeamName + stadium: {query}");
+                query = $"{teamName} stadium {countryName}";
+                _logger.LogDebug($"Geocoding query created pattern, no stadium info: team + 'stadium' + country: {query}");
             }
             //if stadium name and city exists, use it
             else if (!string.IsNullOrWhiteSpace(stadiumInfo.StadiumName) && !string.IsNullOrWhiteSpace(stadiumInfo.City))
             {
-                query = $"{stadiumInfo.StadiumName} {stadiumInfo.City}";
-                _logger.LogDebug($"Geocoding query created pattern: StadiumName + City: {query}");
+                query = $"{stadiumInfo.StadiumName} {stadiumInfo.City} {countryName}";
+                _logger.LogDebug($"Geocoding query created pattern: stadiumName + city + country: {query}");
             }
             //if address and city exists, use it
             else if (!string.IsNullOrWhiteSpace(stadiumInfo.Address) && !string.IsNullOrWhiteSpace(stadiumInfo.City))
             {
-                query = $"{stadiumInfo.Address} {stadiumInfo.City}";
-                _logger.LogDebug($"Geocoding query created pattern: Address + City: {query}");
+                query = $"{stadiumInfo.Address} {stadiumInfo.City} {countryName}";
+                _logger.LogDebug($"Geocoding query created pattern: address + city + country: {query}");
             }
             else
             {
-                query = $"{teamName} stadium";
-                _logger.LogDebug($"Geocoding query created pattern: TeamName + stadium: {query}");
+                query = $"{teamName} stadium {countryName}";
+                _logger.LogDebug($"Geocoding query created pattern: team + 'stadium' + country: {query}");
             }
 
             var coordinates = await _geocodingService.GetCoordinatesAsync(query);
 
             return new StadiumData
             {
-                Name = stadiumInfo?.StadiumName,
+                Name = string.IsNullOrWhiteSpace(stadiumInfo?.StadiumName) ? coordinates?.Name : stadiumInfo.StadiumName,
                 TeamName = teamName,
                 City = stadiumInfo?.City,
                 Address = stadiumInfo?.Address,

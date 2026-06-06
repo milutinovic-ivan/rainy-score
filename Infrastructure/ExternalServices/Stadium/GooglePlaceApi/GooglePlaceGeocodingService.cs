@@ -84,6 +84,7 @@ namespace Infrastructure.ExternalServices.Stadium.GooglePlaceApi
             {
                 return new Coordinates
                 {
+                    Name = stadiumPlace.DisplayName?.Text,
                     Latitude = stadiumPlace.Location.Latitude,
                     Longitude = stadiumPlace.Location.Longitude
                 };

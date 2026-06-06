@@ -9,6 +9,6 @@ namespace Application.Intefraces
 {
     public interface IStadiumService
     {
-        Task<StadiumData?> GetStadiumDataAsync(string teamName);
+        Task<StadiumData?> GetStadiumDataAsync(string teamName, string countryName);
     }
 }

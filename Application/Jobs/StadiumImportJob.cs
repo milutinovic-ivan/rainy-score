@@ -3,6 +3,7 @@ using Domain.Entities;
 using Domain.Interfaces;
 using Quartz;
 using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
 
 namespace Application.Jobs
 {
@@ -35,45 +36,44 @@ namespace Application.Jobs
             int stadiumNotFoundCount = 0;
             int stadiumAddedCount = 0;
 
-            var allTeams = await _teamRepository.GetAllAsync();
+            //just teams without stadion initialized
+            var allTeams = await _teamRepository.GetAllAsync(t => 
+                t.Where(t => t.StadiumId == null)
+                .Include(t => t.Country));
 
             foreach (Team team in allTeams)
             {
-                //just for teams without stadion initialized
-                if(team.StadiumId == null)
+                var stadiumData = await _stadiumService.GetStadiumDataAsync(team.Name, team.Country!.Name);
+
+                if (stadiumData?.Latitude == null || stadiumData.Longitude == null)
                 {
-                    var stadiumData = await _stadiumService.GetStadiumDataAsync(team.Name);
+                    _logger.LogWarning($"No coordinates for stadium: {stadiumData?.Name}, team: {team.Name}");
+                    stadiumNotFoundCount++;
 
-                    if(stadiumData?.Latitude == null || stadiumData.Longitude == null)
-                    {
-                        _logger.LogWarning($"No coordinates for stadium: {stadiumData?.Name}, team: {team.Name}");
-                        stadiumNotFoundCount++;
-
-                        continue;
-                    }
-
-                    Stadium stadium = new Stadium()
-                    {
-                        Name = stadiumData.Name ?? string.Empty,
-                        City = stadiumData.City,
-                        Address = stadiumData.Address,
-                        TerrainType = stadiumData.TerrainType,
-                        Latitude = Math.Round(stadiumData.Latitude.Value, 5),
-                        Longitude = Math.Round(stadiumData.Longitude.Value, 5)
-                    };
-
-                    //add stadium
-                    await _stadiumRepository.AddAsync(stadium);
-
-                    //add reference to team
-                    team.Stadium = stadium;
-                    _teamRepository.Update(team);
-
-                    _logger.LogInformation($"Added stadium: {stadium.Name}, latitude: {stadium.Latitude}, longitude: {stadium.Longitude} " +
-                        $"for team: {team.Name}");
-
-                    stadiumAddedCount++;
+                    continue;
                 }
+
+                Stadium stadium = new Stadium()
+                {
+                    Name = stadiumData.Name ?? string.Empty,
+                    City = stadiumData.City,
+                    Address = stadiumData.Address,
+                    TerrainType = stadiumData.TerrainType,
+                    Latitude = Math.Round(stadiumData.Latitude.Value, 5),
+                    Longitude = Math.Round(stadiumData.Longitude.Value, 5)
+                };
+
+                //add stadium
+                await _stadiumRepository.AddAsync(stadium);
+
+                //add reference to team
+                team.Stadium = stadium;
+                _teamRepository.Update(team);
+
+                _logger.LogInformation($"Added stadium: {stadium.Name}, latitude: {stadium.Latitude}, longitude: {stadium.Longitude} " +
+                    $"for team: {team.Name}");
+
+                stadiumAddedCount++;
             }
 
             await _unitOfWork.SaveChangesAsync();

@@ -61,7 +61,7 @@ namespace Tests.Application.Tests.Jobs
             // ARRANGE
             var stadiumServiceMock = new Mock<IStadiumService>();
 
-            stadiumServiceMock.Setup(s => s.GetStadiumDataAsync(It.IsAny<string>()))
+            stadiumServiceMock.Setup(s => s.GetStadiumDataAsync(It.IsAny<string>(), It.IsAny<string>()))
                 .ReturnsAsync(new StadiumData
                 {
                     Name = "Old Trafford",
@@ -108,7 +108,7 @@ namespace Tests.Application.Tests.Jobs
             // ARRANGE
             var stadiumServiceMock = new Mock<IStadiumService>();
 
-            stadiumServiceMock.Setup(s => s.GetStadiumDataAsync(It.IsAny<string>()))
+            stadiumServiceMock.Setup(s => s.GetStadiumDataAsync(It.IsAny<string>(), It.IsAny<string>()))
                 .ReturnsAsync(new StadiumData
                 {
                     Name = "Old Trafford",

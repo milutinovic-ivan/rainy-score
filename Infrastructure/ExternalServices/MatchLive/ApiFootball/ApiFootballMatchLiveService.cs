@@ -61,14 +61,14 @@ namespace Infrastructure.ExternalServices.MatchLive.ApiFootball
             return leagueData;
         }
 
-        public async Task<StadiumInfo?> GetStadiumInfoAsync(string teamName)
+        public async Task<StadiumInfo?> GetStadiumInfoAsync(string teamName, string countryName)
         {
             await ApplyDelayIfNeeded();
 
-            var jsonString = await GetStadiumInfoJsonAsync(teamName);
-            var StadiumInfo = jsonString != null ? ParseStadiumInfo(jsonString) : null;
+            var jsonString = await GetStadiumInfoJsonAsync(teamName, countryName);
+            var stadiumInfo = jsonString != null ? ParseStadiumInfo(jsonString) : null;
 
-            return StadiumInfo;
+            return stadiumInfo;
         }
 
         private async Task<string?> GetFixturesJsonAsync(DateOnly matchDate)
@@ -374,9 +374,9 @@ namespace Infrastructure.ExternalServices.MatchLive.ApiFootball
             return leagueData;
         }
 
-        private async Task<string?> GetStadiumInfoJsonAsync(string teamName)
+        private async Task<string?> GetStadiumInfoJsonAsync(string teamName, string countryName)
         {
-            var url = $"{_providerSettings.BaseUrl}/teams?name={teamName}";
+            var url = $"{_providerSettings.BaseUrl}/teams?name={teamName}&country={countryName}";
 
             using var request = new HttpRequestMessage(HttpMethod.Get, url);
             request.Headers.Add("x-apisports-key", _providerSettings.ApiKey);
