@@ -41,8 +41,11 @@ namespace Application.Jobs
 
             int serviceRequestCount = 0;
             int matchProcessedCount = 0;
+            int skippedNoStadium = 0;
+            int skippedResponseNull = 0;
 
             var allMatchDetails = await _matchDetailsRepository.GetAllAsync(q => q.
+                Where(md => md.IsHistory).
                 Include(md => md.HomeTeam).
                     ThenInclude(ht => ht.Stadium).
                 Include(md => md.WeatherCondition));
@@ -50,6 +53,14 @@ namespace Application.Jobs
             foreach(var match in allMatchDetails)
             {
                 string? originalResponse = null;
+
+                if(match.HomeTeam.Stadium == null)
+                {
+                    _logger.LogWarning($"Match details id: {match.Id} has no home team stadium information. Skipping...");
+                    skippedNoStadium++;
+
+                    continue;
+                }
 
                 //get weather conditions response just if not already exists
                 if (match.WeatherCondition == null)
@@ -61,9 +72,6 @@ namespace Application.Jobs
                             _logger.LogInformation($"Limit of {serviceRequestCount} service request reached.");
                             break;
                         }
-
-                        //make delay between every service call
-                        await Task.Delay(TimeSpan.FromMilliseconds(200));
 
                         originalResponse = await _weatherHistoryService.GetWeatherHistoryResponseAsync(match.HomeTeam.Stadium.Latitude.Value, 
                             match.HomeTeam.Stadium.Longitude.Value, match.MatchDate);
@@ -80,6 +88,8 @@ namespace Application.Jobs
                 if (originalResponse == null)
                 {
                     _logger.LogError($"For match details id: {match.Id} original weather response is null");
+                    skippedResponseNull++;
+
                     continue;
                 }
 
@@ -108,7 +118,10 @@ namespace Application.Jobs
             // save all at once
             await _unitOfWork.SaveChangesAsync();
 
-            _logger.LogInformation($"Job finished... Match Processed Count: {matchProcessedCount}, Service Request Count: {serviceRequestCount}");
+            _logger.LogInformation($"Job finished... Match Processed Count: {matchProcessedCount}, " +
+                $" Service Request Count: {serviceRequestCount}" +
+                $" Skipped no stadium count: {skippedNoStadium}" +
+                $" Skipped service response null: {skippedResponseNull}");
         }
     }
 }

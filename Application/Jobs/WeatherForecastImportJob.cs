@@ -35,6 +35,8 @@ namespace Application.Jobs
 
             int serviceRequestCount = 0;
             int matchProcessedCount = 0;
+            int skippedNoStadium = 0;
+            int skippedResponseNull = 0;
 
             var nowUtc = DateTime.UtcNow;
             var todayUtc = DateOnly.FromDateTime(nowUtc);
@@ -64,9 +66,6 @@ namespace Application.Jobs
                             break;
                         }
 
-                        //make delay between every service call
-                        await Task.Delay(TimeSpan.FromMilliseconds(200));
-
                         originalResponse = await _weatherForecastService.GetWeatherForecastResponseAsync(match.HomeTeam.Stadium.Latitude.Value,
                             match.HomeTeam.Stadium.Longitude.Value, match.MatchDate);
 
@@ -75,12 +74,16 @@ namespace Application.Jobs
                     else
                     {
                         _logger.LogError($"For match details id: {match.Id} no stadium data for team: {match.HomeTeam.Name}");
+                        skippedNoStadium++;
+
                         continue;
                     }
 
                     if (originalResponse == null)
                     {
                         _logger.LogError($"For match details id: {match.Id} original weather response is null");
+                        skippedResponseNull++;
+
                         continue;
                     }
 
@@ -115,7 +118,8 @@ namespace Application.Jobs
             // save all at once
             await _unitOfWork.SaveChangesAsync();
 
-            _logger.LogInformation($"Job finished... Match Processed Count: {matchProcessedCount}, Service Request Count: {serviceRequestCount}");
+            _logger.LogInformation($"Job finished... Match processed count: {matchProcessedCount}, Service request count: {serviceRequestCount}" +
+                $", Skipped no stadium count: {skippedNoStadium}, Skipped response null count: {skippedResponseNull}");
         }
     }
 }

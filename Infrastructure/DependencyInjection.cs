@@ -78,10 +78,10 @@ namespace Infrastructure
                 //    .WithIdentity("DailyPipelineJobTrigger")
                 //    .WithCronSchedule("0 0 6 * * ?"));
 
-                options.AddTrigger(trigger => trigger
-                    .ForJob(weatherForecastImportJobKey)
-                    .WithIdentity("WeatherForecastImportJobHourlyTrigger")
-                    .WithCronSchedule("0 30 * * * ?"));
+                //options.AddTrigger(trigger => trigger
+                //    .ForJob(weatherForecastImportJobKey)
+                //    .WithIdentity("WeatherForecastImportJobHourlyTrigger")
+                //    .WithCronSchedule("0 30 * * * ?"));
             });
 
             services.AddQuartzHostedService(opt => opt.WaitForJobsToComplete = true);

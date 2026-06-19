@@ -1,30 +1,40 @@
 ﻿using Application.Intefraces;
 using Application.Models;
+using Application.Models.Configuration;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 
 namespace Infrastructure.ExternalServices.WeatherHistory.OpenMeteo
 {
-    internal class OpenMeteoWeatherHistoryService : IWeatherHistoryService
+    public class OpenMeteoWeatherHistoryService : IWeatherHistoryService
     {
-        //TODO put this in config
-        const int ANALYZE_LAST_HOURS = 2;
-        const string SERVICE_CODE = "OpenMeteo";
+        private const string ServiceName = "OpenMeteo";
 
         private readonly HttpClient _httpClient;
         private readonly ILogger<OpenMeteoWeatherHistoryService> _logger;
+        private readonly WeatherProviderSettings _providerSettings;
 
-        public OpenMeteoWeatherHistoryService(IHttpClientFactory factory, ILogger<OpenMeteoWeatherHistoryService> logger)
+        public OpenMeteoWeatherHistoryService(IHttpClientFactory factory, 
+            ILogger<OpenMeteoWeatherHistoryService> logger,
+            IConfiguration configuration)
         {
             _httpClient = factory.CreateClient();
             _logger = logger;
+
+            _providerSettings = configuration
+                .GetSection($"Weather:History:{ServiceName}")
+                .Get<WeatherProviderSettings>()
+                ?? throw new Exception("Missing weather provider config");
         }
 
         public async Task<string?> GetWeatherHistoryResponseAsync(decimal latitude, decimal longitude, DateOnly date)
         {
+            await ApplyDelayIfNeeded();
+
             string stringDate = date.ToString("yyyy-MM-dd");
 
-            var url = $"https://archive-api.open-meteo.com/v1/archive?latitude={latitude}&longitude={longitude}&start_date={stringDate}&end_date={stringDate}" +
+            var url = $"{_providerSettings.BaseUrl}?latitude={latitude}&longitude={longitude}&start_date={stringDate}&end_date={stringDate}" +
                 $"&hourly=temperature_2m,dew_point_2m,precipitation,cloud_cover,cloud_cover_low,wind_speed_10m,sunshine_duration,weather_code";
 
             var response = await _httpClient.GetAsync(url);
@@ -44,7 +54,7 @@ namespace Infrastructure.ExternalServices.WeatherHistory.OpenMeteo
         public WeatherConditionsData PharseWeatherHistoryResponse(string response, TimeOnly time)
         {
             //how long before and after match start we summarize rain or snow, shoud be more exact with minutes here
-            int hourFrom = time.Hour - ANALYZE_LAST_HOURS;
+            int hourFrom = time.Hour - _providerSettings.AnalyzeLastHours;
             //not calculate hour when match is finished or almost finished 
             int hourTo = time.Minute < 30 ? time.Hour + 1 : time.Hour + 2;
             //based on minute calculate real match during hour
@@ -63,10 +73,22 @@ namespace Infrastructure.ExternalServices.WeatherHistory.OpenMeteo
             weatherConditionsData.CloudCoverLow = openMeteoResponse.hourly.cloud_cover_low[hourDuring];
             weatherConditionsData.WindSpeed10m = openMeteoResponse.hourly.wind_speed_10m[hourDuring];
             weatherConditionsData.WeatherCode = openMeteoResponse.hourly.weather_code[hourDuring];
-            weatherConditionsData.WeatherServiceCode = SERVICE_CODE;
+            weatherConditionsData.WeatherServiceCode = ServiceName;
             weatherConditionsData.OriginalResponse = response;
 
             return weatherConditionsData;
+        }
+
+        private async Task ApplyDelayIfNeeded()
+        {
+            //calculate delay, if needed
+            if (_providerSettings.RequestsPerMinute.HasValue)
+            {
+                var delay = TimeSpan.FromMinutes(1.0 / _providerSettings.RequestsPerMinute.Value);
+                _logger.LogDebug($"Applying delay of {delay.TotalSeconds} seconds to respect rate limits");
+
+                await Task.Delay(delay);
+            }
         }
     }
 }
