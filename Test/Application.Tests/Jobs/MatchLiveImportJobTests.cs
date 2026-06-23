@@ -73,6 +73,8 @@ namespace Tests.Application.Tests.Jobs
 
             var runDate = DateOnly.FromDateTime(DateTime.UtcNow);
 
+            matchLiveService.Setup(x => x.GetServiceName).Returns("apifootball");
+
             matchLiveService
                 .Setup(x => x.GetMatchDetailsListAsync(It.IsAny<DateOnly>()))
                 .ReturnsAsync(new List<MatchDetailsData>
@@ -178,6 +180,8 @@ namespace Tests.Application.Tests.Jobs
             var matchLiveService = new Mock<IMatchLiveService>();
 
             var runDate = DateOnly.FromDateTime(DateTime.UtcNow);
+
+            matchLiveService.Setup(x => x.GetServiceName).Returns("apifootball");
 
             matchLiveService
                 .Setup(x => x.GetMatchDetailsListAsync(It.IsAny<DateOnly>()))
@@ -291,6 +295,8 @@ namespace Tests.Application.Tests.Jobs
             var matchLiveService = new Mock<IMatchLiveService>();
 
             var runDate = DateOnly.FromDateTime(DateTime.UtcNow);
+
+            matchLiveService.Setup(x => x.GetServiceName).Returns("apifootball");
 
             matchLiveService
                 .Setup(x => x.GetMatchDetailsListAsync(It.IsAny<DateOnly>()))
@@ -414,6 +420,8 @@ namespace Tests.Application.Tests.Jobs
 
             var runDate = DateOnly.FromDateTime(DateTime.UtcNow);
 
+            matchLiveService.Setup(x => x.GetServiceName).Returns("apifootball");
+
             matchLiveService
                 .Setup(x => x.GetMatchDetailsListAsync(It.IsAny<DateOnly>()))
                 .ReturnsAsync(new List<MatchDetailsData>
@@ -510,6 +518,8 @@ namespace Tests.Application.Tests.Jobs
             var matchLiveService = new Mock<IMatchLiveService>();
 
             var runDate = DateOnly.FromDateTime(DateTime.UtcNow);
+
+            matchLiveService.Setup(x => x.GetServiceName).Returns("apifootball");
 
             matchLiveService
                 .Setup(x => x.GetMatchDetailsListAsync(It.IsAny<DateOnly>()))
@@ -612,6 +622,8 @@ namespace Tests.Application.Tests.Jobs
             var matchLiveService = new Mock<IMatchLiveService>();
 
             var runDate = DateOnly.FromDateTime(DateTime.UtcNow);
+
+            matchLiveService.Setup(x => x.GetServiceName).Returns("apifootball");
 
             matchLiveService
                 .Setup(x => x.GetMatchDetailsListAsync(It.IsAny<DateOnly>()))
@@ -720,6 +732,8 @@ namespace Tests.Application.Tests.Jobs
             await _teamRepository.AddAsync(team2);
             await _unitOfWork.SaveChangesAsync();
 
+            matchLiveService.Setup(x => x.GetServiceName).Returns("apifootball");
+
             matchLiveService
                 .Setup(x => x.GetMatchDetailsListAsync(It.IsAny<DateOnly>()))
                 .ReturnsAsync(new List<MatchDetailsData>
@@ -809,6 +823,148 @@ namespace Tests.Application.Tests.Jobs
 
             Assert.Equal(1.85m, matchDetails.GoalsOver25Odds);
             Assert.Equal(1.95m, matchDetails.GoalsUnder25Odds);
+
+            matchLiveService.Verify(
+                x => x.GetMatchDetailsListAsync(It.IsAny<DateOnly>()),
+                Times.Once);
+
+            matchLiveService.Verify(
+                x => x.GetMatchOddsAsync(1001),
+                Times.Once);
+        }
+
+        [Fact]
+        public async Task Should_Update_Existing_Match_With_Same_Source_And_FixtureId_On_Different_Date()
+        {
+            // Arrange
+            var matchLiveService = new Mock<IMatchLiveService>();
+
+            var runDate = DateOnly.FromDateTime(DateTime.UtcNow);
+            var previousDate = runDate.AddDays(-1);
+
+            var homeTeam = new Team
+            {
+                Name = "Liverpool",
+                CountryId = 1
+            };
+
+            var awayTeam = new Team
+            {
+                Name = "Arsenal",
+                CountryId = 1
+            };
+
+            await _teamRepository.AddAsync(homeTeam);
+            await _teamRepository.AddAsync(awayTeam);
+            await _unitOfWork.SaveChangesAsync();
+
+            var existingMatch = new MatchDetails
+            {
+                LeagueId = 1,
+                Season = previousDate.Year,
+                MatchDate = previousDate,
+                MatchTime = new TimeOnly(18, 30),
+                HomeTeamId = homeTeam.Id,
+                AwayTeamId = awayTeam.Id,
+                DataSource = "apifootball",
+                FixtureId = 1001,
+                Status = "NS",
+                IsHistory = false,
+                HomeWinOdds = 2.10m,
+                DrawWinOdds = 3.20m,
+                AwayWinOdds = 3.80m,
+                GoalsOver25Odds = 1.90m,
+                GoalsUnder25Odds = 1.90m
+            };
+
+            await _matchDetailsRepository.AddAsync(existingMatch);
+            await _unitOfWork.SaveChangesAsync();
+
+            matchLiveService.Setup(x => x.GetServiceName).Returns("apifootball");
+
+            matchLiveService
+                .Setup(x => x.GetMatchDetailsListAsync(It.IsAny<DateOnly>()))
+                .ReturnsAsync(new List<MatchDetailsData>
+                {
+                    new()
+                    {
+                        FixtureId = 1001,
+                        DataSource = "apifootball",
+                        ExternalLeagueId = 39,
+
+                        Country = "England",
+                        LeagueName = "Premier League",
+
+                        HomeTeam = "Liverpool",
+                        AwayTeam = "Arsenal",
+
+                        MatchDate = runDate,
+                        MatchTime = new TimeOnly(19, 45),
+
+                        Status = "FT",
+                        FullTimeHomeGoals = 2,
+                        FullTimeAwayGoals = 1,
+                        FullTimeWiner = 'H',
+                        HalfTimeHomeGoals = 1,
+                        HalfTimeAwayGoals = 1,
+                        HalfTimeWiner = 'D',
+                        IsCup = false
+                    }
+                });
+
+            matchLiveService
+                .Setup(x => x.GetMatchOddsAsync(1001))
+                .ReturnsAsync(new MatchDetailsData
+                {
+                    BookmakerId = 1,
+                    BookmakerName = "Bet365",
+
+                    HomeWinOdds = 1.90m,
+                    DrawWinOdds = 3.50m,
+                    AwayWinOdds = 4.20m,
+
+                    GoalsOver25Odds = 1.85m,
+                    GoalsUnder25Odds = 1.95m
+                });
+
+            var job = new MatchLiveImportJob(
+                matchLiveService.Object,
+                _logger,
+                _countryRepository,
+                _leagueRepository,
+                _teamRepository,
+                _matchDetailsRepository,
+                _leagueExternalMapRepository,
+                _unitOfWork,
+                _configuration);
+
+            var context = new Mock<IJobExecutionContext>();
+
+            context.Setup(x => x.CancellationToken)
+                .Returns(CancellationToken.None);
+
+            context.Setup(x => x.MergedJobDataMap)
+                .Returns(new JobDataMap
+                {
+                    { "DateOffsetDays", 0 }
+                });
+
+            // Act
+            await job.Execute(context.Object);
+
+            // Assert
+            var matches = await _matchDetailsRepository.GetAllAsync(m => m.Where(m => m.FixtureId == 1001));
+            var matchDetails = Assert.Single(matches);
+
+            Assert.Equal(existingMatch.Id, matchDetails.Id);
+            Assert.Equal(runDate, matchDetails.MatchDate);
+            Assert.Equal(new TimeOnly(19, 45), matchDetails.MatchTime);
+            Assert.Equal("FT", matchDetails.Status);
+            Assert.Equal(2, matchDetails.FullTimeHomeGoals);
+            Assert.Equal(1, matchDetails.FullTimeAwayGoals);
+            Assert.Equal(1.90m, matchDetails.HomeWinOdds);
+            Assert.Equal(3.50m, matchDetails.DrawWinOdds);
+            Assert.Equal(4.20m, matchDetails.AwayWinOdds);
 
             matchLiveService.Verify(
                 x => x.GetMatchDetailsListAsync(It.IsAny<DateOnly>()),

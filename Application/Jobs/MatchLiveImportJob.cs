@@ -55,6 +55,8 @@ namespace Application.Jobs
                 var stopwatch = new Stopwatch();
                 stopwatch.Start();
 
+                var fromDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-14));
+
                 //job could be run for today or yesterday
                 var dateOffsetDays = context.MergedJobDataMap.GetIntValue("DateOffsetDays");
                 var runDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(dateOffsetDays));
@@ -62,20 +64,21 @@ namespace Application.Jobs
 
                 //call service implementation to get list of match details
                 var matchDetailsDataList = await _matchLiveService.GetMatchDetailsListAsync(runDate);
+                var serviceName = _matchLiveService.GetServiceName;
 
                 //get all existing data from db
                 var allTeams = await _teamRepository.GetAllAsync(t => t.Include(t => t.Country));
                 var allContries = await _countryRepository.GetAllAsync();
                 var allLeagues = await _leagueRepository.GetAllAsync(l => l.Include(l => l.Country));
                 var allleagueExternalMaps = await _leagueExternalMapRepository.GetAllAsync(lem => lem.Include(lem => lem.League));
-                var runDateMatchDetailsList = await _matchDetailsRepository.GetAllAsync(md => md.Where(m => m.MatchDate == runDate));
+                var lastDaysMatchDetailsList = await _matchDetailsRepository.GetAllAsync(md => md.Where(m => m.DataSource == serviceName && m.MatchDate >= fromDate));
 
                 //put results in dicts to not query db every time
                 var teamsCache = allTeams.ToDictionary(t => (t.Name.Trim(), t.Country!.Name.Trim()), t => t);
                 var countryCache = allContries.ToDictionary(c => c.Name.Trim(), c => c, StringComparer.OrdinalIgnoreCase);
                 var leagueCache = allLeagues.ToDictionary(l => (l.Name.Trim(), l.Country.Name.Trim()), l => l);
                 var leagueExternalMapCache = allleagueExternalMaps.ToDictionary(l => (l.DataSource, l.ExternalLeagueId), l => l);
-                var matchDetailsCache = runDateMatchDetailsList.Where(md => md.FixtureId != null).ToDictionary(md => md.FixtureId!.Value, md => md);
+                var matchDetailsCache = lastDaysMatchDetailsList.Where(md => md.FixtureId != null).ToDictionary(md => md.FixtureId!.Value, md => md);
 
                 int updatedMatches = 0;
                 int insertedMatches = 0;
@@ -250,6 +253,8 @@ namespace Application.Jobs
 
                     if(matchDetailsCache.TryGetValue(matchDetailsData.FixtureId.Value, out var existingMatch))
                     {
+                        existingMatch.MatchDate = matchDetailsData.MatchDate;
+                        existingMatch.MatchTime = matchDetailsData.MatchTime;
                         existingMatch.FullTimeHomeGoals = matchDetailsData.FullTimeHomeGoals;
                         existingMatch.FullTimeAwayGoals = matchDetailsData.FullTimeAwayGoals;
                         existingMatch.FullTimeWiner = matchDetailsData.FullTimeWiner;

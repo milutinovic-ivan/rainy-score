@@ -62,9 +62,12 @@ namespace Tests.Application.Tests.Jobs
         }
 
         [Fact]
-        public async Task Should_Insert_New_Stadium()
+        public async Task Should_Insert_New_Weather_Forecast()
         {
             // ARRANGE
+
+            var nowUtc = DateTime.UtcNow;
+            var todayUtc = DateOnly.FromDateTime(nowUtc);
 
             //insert stadium
             var homeStadium = new Stadium
@@ -99,7 +102,7 @@ namespace Tests.Application.Tests.Jobs
                 HomeTeam = homeTeam,
                 AwayTeam = awayTeam,
 
-                MatchDate = new DateOnly(2026, 6, 19),
+                MatchDate = todayUtc,
                 MatchTime = new TimeOnly(21, 00),
 
                 Status = "NS",
@@ -139,7 +142,7 @@ namespace Tests.Application.Tests.Jobs
             var weatherCondition = weatherConditions.Single();
 
             weatherForecastServiceMock.Verify(
-                s => s.GetWeatherForecastResponseAsync(40.7128m, -74.0060m, new DateOnly(2026, 6, 19)),
+                s => s.GetWeatherForecastResponseAsync(40.7128m, -74.0060m, todayUtc),
                 Times.Once);
 
             weatherForecastServiceMock.Verify(

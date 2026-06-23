@@ -12,8 +12,6 @@ namespace Infrastructure.ExternalServices.MatchLive.ApiFootball
 {
     public class ApiFootballMatchLiveService : IMatchLiveService, ILeagueService, IStadiumInfoService
     {
-        private const string ServiceName = "apifootball";
-
         private readonly HttpClient _httpClient;
         private readonly ILogger<ApiFootballMatchLiveService> _logger;
         private readonly MatchLiveProviderSettings _providerSettings;
@@ -26,10 +24,12 @@ namespace Infrastructure.ExternalServices.MatchLive.ApiFootball
             _logger = logger;
 
             _providerSettings = configuration
-                .GetSection($"MatchLiveProviders:{ServiceName}")
+                .GetSection($"MatchLiveProviders:{GetServiceName}")
                 .Get<MatchLiveProviderSettings>()
                 ?? throw new Exception("Missing match live provider config");
         }
+
+        public string GetServiceName => "apifootball";
 
         public async Task<List<MatchDetailsData>> GetMatchDetailsListAsync(DateOnly matchDate)
         {
@@ -115,7 +115,7 @@ namespace Infrastructure.ExternalServices.MatchLive.ApiFootball
             {
                 var matchDetails = new MatchDetailsData();
 
-                matchDetails.DataSource = ServiceName;
+                matchDetails.DataSource = GetServiceName;
 
                 //fixture
                 var dateStr = item.GetProperty("fixture").GetProperty("date").GetString();
