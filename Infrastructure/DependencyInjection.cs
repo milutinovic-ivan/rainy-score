@@ -12,7 +12,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Quartz;
-using System;
 using System.Reflection;
 
 namespace Infrastructure
@@ -43,7 +42,7 @@ namespace Infrastructure
 
             services.AddQuartz(options =>
             {
-                var dailyPipelineJobKey = new JobKey("DailyPipelineJob");
+                var utcImportPipelineJobKey = new JobKey("UtcImportPipelineJob");
                 var matchHistoryImportJobKey = new JobKey("MatchHistoryImportJob");
                 var stadiumImportJobKey = new JobKey("StadiumImportJob");
                 var weatherHistoryImportJobKey = new JobKey("WeatherHistoryImportJob");
@@ -53,7 +52,7 @@ namespace Infrastructure
                 var weatherForecastImportJobKey = new JobKey("WeatherForecastImportJob");
 
                 //StoreDurably if I want just to run job from api endpoint without scheduler
-                options.AddJob<DailyPipelineJob>(dailyPipelineJobKey, j => j.StoreDurably());
+                options.AddJob<UtcImportPipelineJob>(utcImportPipelineJobKey, j => j.StoreDurably());
 
                 options.AddJob<MatchHistoryImportJob>(matchHistoryImportJobKey, j => j.StoreDurably());
 
@@ -73,15 +72,32 @@ namespace Infrastructure
 
                 options.AddJob<WeatherForecastImportJob>(weatherForecastImportJobKey, j => j.StoreDurably());
 
-                //options.AddTrigger(trigger => trigger
-                //    .ForJob(dailyPipelineJobKey)
-                //    .WithIdentity("DailyPipelineJobTrigger")
-                //    .WithCronSchedule("0 0 6 * * ?"));
+                options.AddTrigger(trigger => trigger
+                    .ForJob(utcImportPipelineJobKey)
+                    .WithIdentity("UtcImportPipelineJobTrigger")
+                    .WithCronSchedule(
+                        "0 10 0,13 * * ?",
+                        cron => cron
+                            .InTimeZone(TimeZoneInfo.Utc)
+                            .WithMisfireHandlingInstructionDoNothing()));
 
-                //options.AddTrigger(trigger => trigger
-                //    .ForJob(weatherForecastImportJobKey)
-                //    .WithIdentity("WeatherForecastImportJobHourlyTrigger")
-                //    .WithCronSchedule("0 30 * * * ?"));
+                options.AddTrigger(trigger => trigger
+                    .ForJob(matchLiveImportYesterdayJobKey)
+                    .WithIdentity("MatchLiveImportJobYesterdayTrigger")
+                    .WithCronSchedule(
+                        "0 30 5 * * ?",
+                        cron => cron
+                            .InTimeZone(TimeZoneInfo.Utc)
+                            .WithMisfireHandlingInstructionDoNothing()));
+
+                options.AddTrigger(trigger => trigger
+                    .ForJob(weatherForecastImportJobKey)
+                    .WithIdentity("WeatherForecastImportJobHourlyTrigger")
+                    .WithCronSchedule(
+                        "0 15 2,4,6,8,10,12,14,16,18,20,22 * * ?",
+                        cron => cron
+                            .InTimeZone(TimeZoneInfo.Utc)
+                            .WithMisfireHandlingInstructionDoNothing()));
             });
 
             services.AddQuartzHostedService(opt => opt.WaitForJobsToComplete = true);

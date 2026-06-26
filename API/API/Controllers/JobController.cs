@@ -17,10 +17,10 @@ namespace API.Controllers
             _logger = logger;
         }
 
-        [HttpPost("run-daily-pipeline")]
-        public async Task<IActionResult> RunDailyPipelineJob()
+        [HttpPost("run-utc-import-pipeline")]
+        public async Task<IActionResult> RunUtcImportPipelineJob()
         {
-            return await TriggerJob(new JobKey("DailyPipelineJob"));
+            return await TriggerJob(new JobKey("UtcImportPipelineJob"));
         }
 
         [HttpPost("run-match-history-import")]

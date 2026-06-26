@@ -1,5 +1,7 @@
 using Application;
 using Infrastructure;
+using Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -25,6 +27,8 @@ builder.Services.AddApplication(builder.Configuration);
 
 var app = builder.Build();
 
+await ApplyMigrationsAsync(app);
+
 // Request logging (HTTP method/path/status + duration)
 app.UseSerilogRequestLogging();
 
@@ -42,3 +46,38 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+static async Task ApplyMigrationsAsync(WebApplication app)
+{
+    const int maxAttempts = 10;
+    var delay = TimeSpan.FromSeconds(5);
+
+    using var scope = app.Services.CreateScope();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    var dbContext = scope.ServiceProvider.GetRequiredService<ScoreDbContext>();
+
+    for (var attempt = 1; attempt <= maxAttempts; attempt++)
+    {
+        try
+        {
+            logger.LogInformation("Applying database migrations. Attempt {Attempt}/{MaxAttempts}", attempt, maxAttempts);
+            await dbContext.Database.MigrateAsync();
+            logger.LogInformation("Database migrations applied successfully");
+            return;
+        }
+        catch (Exception ex) when (attempt < maxAttempts)
+        {
+            logger.LogWarning(
+                ex,
+                "Database migration attempt {Attempt}/{MaxAttempts} failed. Retrying in {DelaySeconds} seconds",
+                attempt,
+                maxAttempts,
+                delay.TotalSeconds);
+
+            await Task.Delay(delay);
+        }
+    }
+
+    logger.LogInformation("Applying database migrations. Final attempt {MaxAttempts}/{MaxAttempts}", maxAttempts, maxAttempts);
+    await dbContext.Database.MigrateAsync();
+}
