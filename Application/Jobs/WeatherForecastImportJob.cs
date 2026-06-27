@@ -1,4 +1,5 @@
 ﻿using Application.Intefraces;
+using Application.Jobs.Services;
 using Domain.Entities;
 using Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -17,21 +18,26 @@ namespace Application.Jobs
         private readonly IRepository<MatchDetails> _matchDetailsRepository;
         private readonly IWeatherForecastService _weatherForecastService;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IJobExecutionsService _jobExecutionsService;
 
         public WeatherForecastImportJob(ILogger<WeatherForecastImportJob> logger, 
             IRepository<MatchDetails> matchDetailsRepository,
             IWeatherForecastService weatherForecastService,
-            IUnitOfWork unitOfWork)
+            IUnitOfWork unitOfWork,
+            IJobExecutionsService jobExecutionsService)
         {
             _logger = logger;
             _matchDetailsRepository = matchDetailsRepository;
             _weatherForecastService = weatherForecastService;
             _unitOfWork = unitOfWork;
+            _jobExecutionsService = jobExecutionsService;
         }
 
         public async Task Execute(IJobExecutionContext context)
         {
             _logger.LogInformation("Job started...");
+
+            var executionId = await _jobExecutionsService.StartAsync(nameof(WeatherForecastImportJob));
 
             int serviceRequestCount = 0;
             int matchProcessedCount = 0;
@@ -120,6 +126,17 @@ namespace Application.Jobs
 
             _logger.LogInformation($"Job finished... Match processed count: {matchProcessedCount}, Service request count: {serviceRequestCount}" +
                 $", Skipped no stadium count: {skippedNoStadium}, Skipped response null count: {skippedResponseNull}");
+
+            //log finished job metrics
+            var metricsJson = new
+            {
+                matchProcessedCount,
+                serviceRequestCount,
+                skippedNoStadium,
+                skippedResponseNull
+            };
+
+            await _jobExecutionsService.FinishAsync(executionId, JobExecutionStatus.Success, metricsJson);
         }
     }
 }

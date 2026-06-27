@@ -1,5 +1,6 @@
 ﻿using Application.Intefraces;
 using Application.Jobs;
+using Application.Jobs.Services;
 using Application.Models;
 using Domain.Entities;
 using Domain.Interfaces;
@@ -31,6 +32,8 @@ namespace Tests.Application.Tests.Jobs
 
         Mock<IJobExecutionContext> _jobExecutionContext;
 
+        IJobExecutionsService _jobExecutionsService;
+
         public WeatherForecastImportJobTest()
         {
             connection = new SqliteConnection("DataSource=:memory:");
@@ -53,6 +56,8 @@ namespace Tests.Application.Tests.Jobs
             _unitOfWork = new EfUnitOfWork(dbContext);
 
             _jobExecutionContext = new Mock<IJobExecutionContext>();
+
+            _jobExecutionsService = new Mock<IJobExecutionsService>().Object;
         }
 
         public void Dispose()
@@ -132,7 +137,7 @@ namespace Tests.Application.Tests.Jobs
             weatherForecastServiceMock.Setup(s => s.PharseWeatherForecastResponse(It.IsAny<string>(), It.IsAny<TimeOnly>()))
                 .Returns(weatherConditionsData);
 
-            var job = new WeatherForecastImportJob(_logger, _matchDetailsRepository, weatherForecastServiceMock.Object, _unitOfWork);
+            var job = new WeatherForecastImportJob(_logger, _matchDetailsRepository, weatherForecastServiceMock.Object, _unitOfWork, _jobExecutionsService);
 
             // ACT
             await job.Execute(_jobExecutionContext.Object);

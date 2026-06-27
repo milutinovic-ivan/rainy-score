@@ -1,4 +1,5 @@
 ﻿using Application.Intefraces;
+using Application.Jobs.Services;
 using Application.Models;
 using Application.Models.Configuration;
 using Domain.Entities;
@@ -9,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using Quartz;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
+using System.Text.Json;
 
 namespace Application.Jobs
 {
@@ -23,6 +25,7 @@ namespace Application.Jobs
         private readonly IRepository<MatchDetails> _matchDetailsRepository;
         private readonly IRepository<LeagueExternalMap> _leagueExternalMapRepository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IJobExecutionsService _jobExecutionsService;
 
         public MatchLiveImportJob(IMatchLiveService matchLiveService, ILogger<MatchLiveImportJob> logger,
            IRepository<Country> countryRepository,
@@ -30,7 +33,9 @@ namespace Application.Jobs
            IRepository<Team> teamRepository,
            IRepository<MatchDetails> matchDetailsRepository,
            IRepository<LeagueExternalMap> leagueExternalMapRepository,
-           IUnitOfWork unitOfWork, IConfiguration configuration)
+           IUnitOfWork unitOfWork, 
+           IConfiguration configuration,
+           IJobExecutionsService jobExecutionsService)
         {
             _matchLiveService = matchLiveService;
             _logger = logger;
@@ -40,11 +45,14 @@ namespace Application.Jobs
             _matchDetailsRepository = matchDetailsRepository;
             _leagueExternalMapRepository = leagueExternalMapRepository;
             _unitOfWork = unitOfWork;
+            _jobExecutionsService = jobExecutionsService;
         }
 
         public async Task Execute(IJobExecutionContext context)
         {
             var ct = context.CancellationToken;
+
+            var executionId = await _jobExecutionsService.StartAsync(nameof(MatchLiveImportJob));
 
             await _unitOfWork.BeginTransactionAsync(ct);
 
@@ -325,11 +333,26 @@ namespace Application.Jobs
                 _logger.LogInformation($"Job finished... Elapsed time: {elapsed.TotalSeconds} s");
 
                 await _unitOfWork.CommitTransactionAsync(ct);
+
+                //log finished job metrics
+                var metricsJson = new
+                {
+                    teamsAdded,
+                    updatedMatches,
+                    insertedMatches,
+                    skippedMatchesWithoutOdds,
+                    skippedMatchesWithoutFullTimeResult,
+                    skippedMatchesIsCup
+                };
+
+                await _jobExecutionsService.FinishAsync(executionId, JobExecutionStatus.Success, metricsJson);
             }
             catch (Exception ex)
             {
                 await _unitOfWork.RollbackTransactionAsync(ct);
                 _logger.LogError(ex, "An error occurred during job execution");
+
+                await _jobExecutionsService.FinishAsync(executionId, JobExecutionStatus.Failed, null, ex);
 
                 throw;
             }

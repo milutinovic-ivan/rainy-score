@@ -1,5 +1,6 @@
 using Application.Intefraces;
 using Application.Jobs;
+using Application.Jobs.Services;
 using Application.Models;
 using Domain.Entities;
 using Domain.Interfaces;
@@ -30,6 +31,8 @@ namespace Tests.Application.Tests.Jobs
 
         IUnitOfWork _unitOfWork;
 
+        IJobExecutionsService _jobExecutionsService;
+
         public MatchLiveImportJobTests()
         {
             connection = new SqliteConnection("DataSource=:memory:");
@@ -57,6 +60,8 @@ namespace Tests.Application.Tests.Jobs
             _leagueExternalMapRepository = new ScoreRepository<LeagueExternalMap>(dbContext);
 
             _unitOfWork = new EfUnitOfWork(dbContext);
+
+            _jobExecutionsService = new Mock<IJobExecutionsService>().Object;
         }
 
         public void Dispose()
@@ -123,7 +128,8 @@ namespace Tests.Application.Tests.Jobs
                 _matchDetailsRepository,
                 _leagueExternalMapRepository,
                 _unitOfWork,
-                _configuration);
+                _configuration,
+                _jobExecutionsService);
 
             var context = new Mock<IJobExecutionContext>();
 
@@ -231,7 +237,8 @@ namespace Tests.Application.Tests.Jobs
                 _matchDetailsRepository,
                 _leagueExternalMapRepository,
                 _unitOfWork,
-                _configuration);
+                _configuration,
+                _jobExecutionsService);
 
             var context = new Mock<IJobExecutionContext>();
 
@@ -346,7 +353,8 @@ namespace Tests.Application.Tests.Jobs
                 _matchDetailsRepository,
                 _leagueExternalMapRepository,
                 _unitOfWork,
-                _configuration);
+                _configuration,
+                _jobExecutionsService);
 
             var context = new Mock<IJobExecutionContext>();
 
@@ -470,7 +478,8 @@ namespace Tests.Application.Tests.Jobs
                 _matchDetailsRepository,
                 _leagueExternalMapRepository,
                 _unitOfWork,
-                _configuration);
+                _configuration,
+                _jobExecutionsService);
 
             var context = new Mock<IJobExecutionContext>();
 
@@ -574,7 +583,8 @@ namespace Tests.Application.Tests.Jobs
                 _matchDetailsRepository,
                 _leagueExternalMapRepository,
                 _unitOfWork,
-                _configuration);
+                _configuration,
+                _jobExecutionsService);
 
             var context = new Mock<IJobExecutionContext>();
 
@@ -663,7 +673,8 @@ namespace Tests.Application.Tests.Jobs
                 _matchDetailsRepository,
                 _leagueExternalMapRepository,
                 _unitOfWork,
-                _configuration);
+                _configuration,
+                _jobExecutionsService);
 
             var context = new Mock<IJobExecutionContext>();
 
@@ -783,7 +794,8 @@ namespace Tests.Application.Tests.Jobs
                 _matchDetailsRepository,
                 _leagueExternalMapRepository,
                 _unitOfWork,
-                _configuration);
+                _configuration,
+                _jobExecutionsService);
 
             var context = new Mock<IJobExecutionContext>();
 
@@ -936,7 +948,8 @@ namespace Tests.Application.Tests.Jobs
                 _matchDetailsRepository,
                 _leagueExternalMapRepository,
                 _unitOfWork,
-                _configuration);
+                _configuration,
+                _jobExecutionsService);
 
             var context = new Mock<IJobExecutionContext>();
 

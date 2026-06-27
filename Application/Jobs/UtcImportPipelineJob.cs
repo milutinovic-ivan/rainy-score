@@ -1,3 +1,4 @@
+using Application.Jobs.Services;
 using Microsoft.Extensions.Logging;
 using Quartz;
 
@@ -8,19 +9,24 @@ namespace Application.Jobs
     {
         private readonly ISchedulerFactory _schedulerFactory;
         private readonly ILogger<UtcImportPipelineJob> _logger;
+        private readonly IJobExecutionsService _jobExecutionsService;
 
         public UtcImportPipelineJob(
             ISchedulerFactory schedulerFactory,
-            ILogger<UtcImportPipelineJob> logger)
+            ILogger<UtcImportPipelineJob> logger,
+            IJobExecutionsService jobExecutionsService)
         {
             _schedulerFactory = schedulerFactory;
             _logger = logger;
+            _jobExecutionsService = jobExecutionsService;
         }
 
         public async Task Execute(IJobExecutionContext context)
         {
             var scheduler = await _schedulerFactory.GetScheduler(context.CancellationToken);
             var weatherForecastHourlyTriggerKey = new TriggerKey("WeatherForecastImportJobHourlyTrigger");
+
+            var executionId = await _jobExecutionsService.StartAsync(nameof(UtcImportPipelineJob));
 
             _logger.LogInformation("UTC import pipeline started");
 
@@ -47,6 +53,15 @@ namespace Application.Jobs
                     context.CancellationToken);
 
                 _logger.LogInformation("UTC import pipeline finished");
+
+                await _jobExecutionsService.FinishAsync(executionId, JobExecutionStatus.Success);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred during job execution");
+                await _jobExecutionsService.FinishAsync(executionId, JobExecutionStatus.Failed, null, ex);
+
+                throw;
             }
             finally
             {

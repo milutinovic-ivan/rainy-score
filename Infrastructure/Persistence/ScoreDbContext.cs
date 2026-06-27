@@ -13,8 +13,8 @@ namespace Infrastructure.Persistence
         public DbSet<Stadium> Stadiums { get; set; }
         public DbSet<MatchDetails> MatchDetails { get; set; }
         public DbSet<WeatherCondition> WeatherConditions { get; set; }
-
         public DbSet<LeagueExternalMap> LeagueExternalMaps { get; set; }
+        public DbSet<JobExecution> JobExecutions { get; set; }
 
         public ScoreDbContext(DbContextOptions<ScoreDbContext> options) : base(options) { }
 
@@ -52,6 +52,10 @@ namespace Infrastructure.Persistence
             modelBuilder.Entity<WeatherCondition>()
                 .Property(wc => wc.WindSpeed10m)
                 .HasColumnName("wind_speed_10m");
+
+            modelBuilder.Entity<JobExecution>()
+                .Property(x => x.MetricsJson)
+                .HasColumnType("jsonb");
 
             //just for tests proposes, since sqlite doesn't support json document type
             if (Database.ProviderName == "Microsoft.EntityFrameworkCore.Sqlite")

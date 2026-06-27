@@ -1,4 +1,5 @@
 ﻿using Application.Intefraces;
+using Application.Jobs.Services;
 using Application.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,6 +16,8 @@ namespace Application
         public static IServiceCollection AddApplication(this IServiceCollection services, IConfiguration config)
         {
             services.AddScoped<IStadiumService, StadiumService>();
+
+            services.AddScoped<IJobExecutionsService, JobExecutionsService>();
 
             return services;
         }

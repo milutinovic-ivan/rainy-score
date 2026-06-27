@@ -1,5 +1,6 @@
 ﻿using Application.Intefraces;
 using Application.Jobs;
+using Application.Jobs.Services;
 using Application.Models;
 using Domain.Entities;
 using Domain.Interfaces;
@@ -27,6 +28,8 @@ namespace Tests.Application.Tests.Jobs
 
         Mock<IJobExecutionContext> _jobExecutionContext;
 
+        IJobExecutionsService _jobExecutionsService;
+
         public StadiumImportJobTest()
         {
             connection = new SqliteConnection("DataSource=:memory:");
@@ -47,6 +50,8 @@ namespace Tests.Application.Tests.Jobs
             _unitOfWork = new EfUnitOfWork(dbContext);
 
             _jobExecutionContext = new Mock<IJobExecutionContext>();
+
+            _jobExecutionsService = new Mock<IJobExecutionsService>().Object;
         }
 
         public void Dispose()
@@ -78,7 +83,7 @@ namespace Tests.Application.Tests.Jobs
 
             await _unitOfWork.SaveChangesAsync();
 
-            var job = new StadiumImportJob(_stadiumRepository, _teamRepository, stadiumServiceMock.Object, _logger, _unitOfWork);
+            var job = new StadiumImportJob(_stadiumRepository, _teamRepository, stadiumServiceMock.Object, _logger, _unitOfWork, _jobExecutionsService);
 
             // ACT
             await job.Execute(_jobExecutionContext.Object);
@@ -124,7 +129,7 @@ namespace Tests.Application.Tests.Jobs
             await _teamRepository.AddAsync(team);
             await _unitOfWork.SaveChangesAsync();
 
-            var job = new StadiumImportJob(_stadiumRepository, _teamRepository, stadiumServiceMock.Object, _logger, _unitOfWork);
+            var job = new StadiumImportJob(_stadiumRepository, _teamRepository, stadiumServiceMock.Object, _logger, _unitOfWork, _jobExecutionsService);
 
             // ACT
             await job.Execute(_jobExecutionContext.Object);
