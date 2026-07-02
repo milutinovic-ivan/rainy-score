@@ -4,6 +4,8 @@ using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
+LoadDotEnv();
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Replace default logging with Serilog
@@ -80,4 +82,50 @@ static async Task ApplyMigrationsAsync(WebApplication app)
 
     logger.LogInformation("Applying database migrations. Final attempt {MaxAttempts}/{MaxAttempts}", maxAttempts, maxAttempts);
     await dbContext.Database.MigrateAsync();
+}
+
+static void LoadDotEnv()
+{
+    foreach (var path in GetDotEnvPaths())
+    {
+        if (!File.Exists(path))
+        {
+            continue;
+        }
+
+        foreach (var line in File.ReadAllLines(path))
+        {
+            var trimmedLine = line.Trim();
+
+            if (string.IsNullOrWhiteSpace(trimmedLine) || trimmedLine.StartsWith('#'))
+            {
+                continue;
+            }
+
+            var separatorIndex = trimmedLine.IndexOf('=');
+
+            if (separatorIndex <= 0)
+            {
+                continue;
+            }
+
+            var key = trimmedLine[..separatorIndex].Trim();
+            var value = trimmedLine[(separatorIndex + 1)..].Trim().Trim('"');
+
+            if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(key)))
+            {
+                Environment.SetEnvironmentVariable(key, value);
+            }
+        }
+
+        return;
+    }
+}
+
+static IEnumerable<string> GetDotEnvPaths()
+{
+    var currentDirectory = Directory.GetCurrentDirectory();
+
+    yield return Path.Combine(currentDirectory, ".env");
+    yield return Path.Combine(currentDirectory, "..", ".env");
 }
