@@ -36,6 +36,7 @@
 	<ItemGroup>
 		<Content Include="ExternalServices\MatchHistory\FootballData\Files\**\*">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
 		</Content>
 	</ItemGroup>
 	
