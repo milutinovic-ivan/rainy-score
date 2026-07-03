@@ -34,10 +34,10 @@
   </ItemGroup>
 
 	<ItemGroup>
-		<Content Include="ExternalServices\MatchHistory\FootballData\Files\**\*">
+		<None Update="ExternalServices\MatchHistory\FootballData\Files\**\*">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-		</Content>
+		</None>
 	</ItemGroup>
 	
 
