@@ -52,7 +52,10 @@ namespace Application.Jobs
         {
             var ct = context.CancellationToken;
 
-            var executionId = await _jobExecutionsService.StartAsync(nameof(MatchLiveImportJob));
+            var dateOffsetDays = context.MergedJobDataMap.GetIntValue("DateOffsetDays");
+            var logDay = dateOffsetDays == 0 ? "Today" : "Yesterday";
+
+            var executionId = await _jobExecutionsService.StartAsync($"{nameof(MatchLiveImportJob)} {logDay}");
 
             await _unitOfWork.BeginTransactionAsync(ct);
 
@@ -66,7 +69,6 @@ namespace Application.Jobs
                 var fromDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-14));
 
                 //job could be run for today or yesterday
-                var dateOffsetDays = context.MergedJobDataMap.GetIntValue("DateOffsetDays");
                 var runDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(dateOffsetDays));
                 _logger.LogInformation($"Importing live matches for date: {runDate}, date offset days: {dateOffsetDays}");
 

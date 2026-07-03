@@ -72,33 +72,42 @@ namespace Infrastructure
 
                 options.AddJob<WeatherForecastImportJob>(weatherForecastImportJobKey, j => j.StoreDurably());
 
-                //options.AddTrigger(trigger => trigger
-                //    .ForJob(utcImportPipelineJobKey)
-                //    .WithIdentity("UtcImportPipelineJobTrigger")
-                //    .WithCronSchedule(
-                //        "0 10 0,13 * * ?",
-                //        cron => cron
-                //            .InTimeZone(TimeZoneInfo.Utc)
-                //            .WithMisfireHandlingInstructionDoNothing()));
+                options.AddTrigger(trigger => trigger
+                    .ForJob(utcImportPipelineJobKey)
+                    .WithIdentity("UtcImportPipelineJobTrigger")
+                    .WithCronSchedule(
+                        "0 15 0,13 * * ?",
+                        cron => cron
+                            .InTimeZone(TimeZoneInfo.Utc)
+                            .WithMisfireHandlingInstructionFireAndProceed()));
 
-                //options.AddTrigger(trigger => trigger
-                //    .ForJob(matchLiveImportYesterdayJobKey)
-                //    .WithIdentity("MatchLiveImportJobYesterdayTrigger")
-                //    .WithCronSchedule(
-                //        "0 30 5 * * ?",
-                //        cron => cron
-                //            .InTimeZone(TimeZoneInfo.Utc)
-                //            .WithMisfireHandlingInstructionDoNothing()));
+                options.AddTrigger(trigger => trigger
+                    .ForJob(matchLiveImportYesterdayJobKey)
+                    .WithIdentity("MatchLiveImportJobYesterdayTrigger")
+                    .WithCronSchedule(
+                        "0 30 3 * * ?",
+                        cron => cron
+                            .InTimeZone(TimeZoneInfo.Utc)
+                            .WithMisfireHandlingInstructionFireAndProceed()));
 
-                //options.AddTrigger(trigger => trigger
-                //    .ForJob(weatherForecastImportJobKey)
-                //    .WithIdentity("WeatherForecastImportJobHourlyTrigger")
-                //    .WithCronSchedule(
-                //        "0 15 2,4,6,8,10,12,14,16,18,20,22 * * ?",
-                //        cron => cron
-                //            .InTimeZone(TimeZoneInfo.Utc)
-                //            .WithMisfireHandlingInstructionDoNothing()));
-            });
+                options.AddTrigger(trigger => trigger
+                    .ForJob(weatherForecastImportJobKey)
+                    .WithIdentity("WeatherForecastImportJobHourlyTrigger")
+                    .WithCronSchedule(
+                        "0 15 2,4,6,8,10,12,14,16,18,20,22 * * ?",
+                        cron => cron
+                            .InTimeZone(TimeZoneInfo.Utc)
+                            .WithMisfireHandlingInstructionFireAndProceed()));
+
+                options.AddTrigger(trigger => trigger
+                    .ForJob(weatherHistoryImportJobKey)
+                    .WithIdentity("WeatherHistoryImportJobHourlyTrigger")
+                    .WithCronSchedule(
+                        "0 30 5 * * ?",
+                        cron => cron
+                            .InTimeZone(TimeZoneInfo.Utc)
+                            .WithMisfireHandlingInstructionFireAndProceed()));
+                            });
 
             services.AddQuartzHostedService(opt => opt.WaitForJobsToComplete = true);
 
