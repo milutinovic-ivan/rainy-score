@@ -37,8 +37,17 @@ namespace Infrastructure.ExternalServices.MatchHistory.FootballData
                 };
 
                 //import all files from directory
-                var path = Path.GetFullPath( 
-                    Path.Combine(_hostEnvironment.ContentRootPath, "..", "Infrastructure", "ExternalServices", "MatchHistory", "FootballData", "Files"));
+                var publishPath = Path.Combine(_hostEnvironment.ContentRootPath, "ExternalServices", "MatchHistory", "FootballData", "Files");
+
+                string path;
+                if (Directory.Exists(publishPath))
+                {
+                    path = publishPath;
+                }
+                else
+                {
+                    path = Path.GetFullPath(Path.Combine(_hostEnvironment.ContentRootPath, "..", "Infrastructure", "ExternalServices", "MatchHistory", "FootballData", "Files"));
+                }
 
                 var files = Directory.GetFiles(path);
 
