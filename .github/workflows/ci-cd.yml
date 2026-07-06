@@ -42,7 +42,8 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             cd /opt/rainyscore
-            git pull
+            git fetch origin
+            git reset --hard origin/main
             docker compose up -d --build
 
   
