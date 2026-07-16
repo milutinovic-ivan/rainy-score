@@ -65,7 +65,7 @@ static async Task ApplyMigrationsAsync(WebApplication app)
             logger.LogInformation("Applying database migrations. Attempt {Attempt}/{MaxAttempts}", attempt, maxAttempts);
             await dbContext.Database.MigrateAsync();
             logger.LogInformation("Database migrations applied successfully");
-            logger.LogInformation("CI CD also works");
+            logger.LogInformation("CI CD also works, 2.check");
             return;
         }
         catch (Exception ex) when (attempt < maxAttempts)
