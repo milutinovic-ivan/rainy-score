@@ -846,13 +846,13 @@ namespace Tests.Application.Tests.Jobs
         }
 
         [Fact]
-        public async Task Should_Update_Existing_Match_With_Same_Source_And_FixtureId_On_Different_Date()
+        public async Task Should_Update_Existing_Match_With_Same_Source_And_FixtureId_Outside_Recent_Date_Window()
         {
             // Arrange
             var matchLiveService = new Mock<IMatchLiveService>();
 
             var runDate = DateOnly.FromDateTime(DateTime.UtcNow);
-            var previousDate = runDate.AddDays(-1);
+            var previousDate = runDate.AddDays(-30);
 
             var homeTeam = new Team
             {

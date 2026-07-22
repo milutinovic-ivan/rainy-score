@@ -33,7 +33,7 @@ namespace Application.Jobs
            IRepository<Team> teamRepository,
            IRepository<MatchDetails> matchDetailsRepository,
            IRepository<LeagueExternalMap> leagueExternalMapRepository,
-           IUnitOfWork unitOfWork, 
+           IUnitOfWork unitOfWork,
            IConfiguration configuration,
            IJobExecutionsService jobExecutionsService)
         {
@@ -66,8 +66,6 @@ namespace Application.Jobs
                 var stopwatch = new Stopwatch();
                 stopwatch.Start();
 
-                var fromDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-14));
-
                 //job could be run for today or yesterday
                 var runDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(dateOffsetDays));
                 _logger.LogInformation($"Importing live matches for date: {runDate}, date offset days: {dateOffsetDays}");
@@ -81,14 +79,26 @@ namespace Application.Jobs
                 var allContries = await _countryRepository.GetAllAsync();
                 var allLeagues = await _leagueRepository.GetAllAsync(l => l.Include(l => l.Country));
                 var allleagueExternalMaps = await _leagueExternalMapRepository.GetAllAsync(lem => lem.Include(lem => lem.League));
-                var lastDaysMatchDetailsList = await _matchDetailsRepository.GetAllAsync(md => md.Where(m => m.DataSource == serviceName && m.MatchDate >= fromDate));
+
+                var matchDetailsFixtureIds = matchDetailsDataList
+                    .Where(md => md.FixtureId is not null)
+                    .Select(md => md.FixtureId!.Value)
+                    .Distinct()
+                    .ToList();
+
+                var existingMatchDetailsList = await _matchDetailsRepository.GetAllAsync(md => md.Where(m =>
+                    m.DataSource == serviceName &&
+                    m.FixtureId != null &&
+                    matchDetailsFixtureIds.Contains(m.FixtureId.Value)));
 
                 //put results in dicts to not query db every time
                 var teamsCache = allTeams.ToDictionary(t => (t.Name.Trim(), t.Country!.Name.Trim()), t => t);
                 var countryCache = allContries.ToDictionary(c => c.Name.Trim(), c => c, StringComparer.OrdinalIgnoreCase);
                 var leagueCache = allLeagues.ToDictionary(l => (l.Name.Trim(), l.Country.Name.Trim()), l => l);
                 var leagueExternalMapCache = allleagueExternalMaps.ToDictionary(l => (l.DataSource, l.ExternalLeagueId), l => l);
-                var matchDetailsCache = lastDaysMatchDetailsList.Where(md => md.FixtureId != null).ToDictionary(md => md.FixtureId!.Value, md => md);
+                var matchDetailsCache = existingMatchDetailsList
+                    .Where(md => md.FixtureId != null)
+                    .ToDictionary(md => md.FixtureId!.Value, md => md);
 
                 int updatedMatches = 0;
                 int insertedMatches = 0;
@@ -112,7 +122,7 @@ namespace Application.Jobs
 
                     //get league info, if it is cup skip match
                     LeagueData? leagueData = await GetLeagueInfoAsync(matchDetailsData);
-                    if(leagueData is null || leagueData.IsCup)
+                    if (leagueData is null || leagueData.IsCup)
                     {
                         skippedMatchesIsCup++;
                         _logger.LogWarning($"Match skipped... league is null or it is cup not league, LeagueName: {leagueData?.Name} ; ExternalLeagueId: {matchDetailsData.ExternalLeagueId}");
@@ -123,7 +133,7 @@ namespace Application.Jobs
                     //if match is finished but there is no full time result, remove match if exists and skip
                     if (matchDetailsData.Status == "FT" && (matchDetailsData.FullTimeHomeGoals is null || matchDetailsData.FullTimeAwayGoals is null))
                     {
-                        if(matchDetailsCache.TryGetValue(matchDetailsData.FixtureId.Value, out var matchToDelete))
+                        if (matchDetailsCache.TryGetValue(matchDetailsData.FixtureId.Value, out var matchToDelete))
                         {
                             _matchDetailsRepository.Delete(matchToDelete);
                             _logger.LogInformation($"Match deleted... match is finished but there is no full time result");
@@ -261,7 +271,7 @@ namespace Application.Jobs
 
                     //MatchDetails
 
-                    if(matchDetailsCache.TryGetValue(matchDetailsData.FixtureId.Value, out var existingMatch))
+                    if (matchDetailsCache.TryGetValue(matchDetailsData.FixtureId.Value, out var existingMatch))
                     {
                         existingMatch.MatchDate = matchDetailsData.MatchDate;
                         existingMatch.MatchTime = matchDetailsData.MatchTime;
